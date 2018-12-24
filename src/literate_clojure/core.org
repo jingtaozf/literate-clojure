@@ -1,0 +1,60 @@
+# -*- encoding:utf-8 Mode: POLY-ORG;  -*- --- 
+#+OPTIONS: toc:2
+#+STARTUP: noindent
+#+STARTUP: inlineimages
+
+* Introduction
+todo.
+* how to do it?
+todo.
+* Implementation
+** reader macros
+Unlike Common Lisp, Clojure doesn't support user-defined reader macros.
+You can read some of the rationale for why in this chat log, among other places.
+I think that's probably a good decision; I don't see a lot of need for mangling the reader.
+Regular macros get you pretty far already and Clojure has built-in reader support for all the good stuff.
+
+But how hard would it be to have custom reader macros in Clojure if you wanted them?
+Turns out not too hard if you're willing to ruthlessly break encapsulation and rely on implementation details.
+Here's one way you could define a dispatch reader macro (i.e. one starting with # and some specified second character):
+#+BEGIN_SRC clojure
+(defn dispatch-reader-macro [ch fun]
+  (let [dm (.get (doto (.getDeclaredField clojure.lang.LispReader "dispatchMacros")
+                   (.setAccessible true))
+                 nil)]
+    (aset dm (int ch) fun)))
+#+END_SRC
+Pass in a character and an fn and you get a reader macro.
+** a test to uppercase string
+For a silly example let's make reader syntax to uppercase a literal string.
+#+BEGIN_SRC clojure
+(defn uppercase-string [reader quote opts pending-forms]
+  (clojure.pprint/cl-format true "type of reader:~s~%" (type reader))
+  (let [c (.read reader)]
+    (if (= c (int \"))
+      (.toUpperCase (.invoke
+                     (clojure.lang.LispReader$StringReader.)
+                     reader
+                     quote opts pending-forms))
+      (throw (Exception. (str "Reader barfed on " (char c)))))))
+#+END_SRC
+
+The function is passed a reader and the dispatch character (which you can usually ignore).
+I cheat and use Clojure's StringReader to do the real work.
+
+Now I can do this:
+#+BEGIN_SRC clojure :tangle no
+(dispatch-reader-macro \U uppercase-string)
+#+END_SRC
+
+#+BEGIN_SRC clojure :tangle no
+#U"Foo bar BAZ"
+(println #U"foo\nbar")
+#U(blarg)
+(= "FOO" "foo")
+(= "FOO" #U"foo")
+#+END_SRC
+
+* References
+https://github.com/klutometis/reader-macros
+https://github.com/lambdatronic/org-babel-example
