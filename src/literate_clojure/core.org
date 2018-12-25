@@ -8,7 +8,38 @@ todo.
 * how to do it?
 todo.
 * Implementation
+** Preparation
+Let's create a new namespace for this library.
+#+BEGIN_SRC clojure
+(ns literate-clojure.core
+  (:use    [clojure.string]
+           [clojure.pprint])
+  (:require
+    [taoensso.timbre :as timbre
+      :refer [log  trace  debug  info  warn  error  fatal  report
+              logf tracef debugf infof warnf errorf fatalf reportf
+              spy get-env]])
+  (:import (clojure.lang LispReader
+                         LispReader$WrappingReader)))
+#+END_SRC
+
+** stream read operations
+The reader class is [[https://docs.oracle.com/javase/7/docs/api/java/io/PushbackReader.html][PushbackReader]], but it don't provide a ~read line~ operation, let's implement it firstly
+#+BEGIN_SRC clojure
+(defn literate-read-line [reader]
+  (let [c (.read reader)]
+    (cond (= c -1) nil
+          (= c (int \newline)) ""
+          :else (with-out-str
+                  (do (cl-format *out* "~c" (char c))
+                      (loop [c (.read reader)]
+                        (cond (= c -1) nil
+                              (= c (int \newline)) nil
+                              :else (do (cl-format *out* "~c" (char c))
+                                        (recur (.read reader))))))))))
+#+END_SRC
 ** reader macros
+https://cdaddr.com/programming/clojure-reader-macros/
 Unlike Common Lisp, Clojure doesn't support user-defined reader macros.
 You can read some of the rationale for why in this chat log, among other places.
 I think that's probably a good decision; I don't see a lot of need for mangling the reader.
@@ -22,37 +53,63 @@ Here's one way you could define a dispatch reader macro (i.e. one starting with 
   (let [dm (.get (doto (.getDeclaredField clojure.lang.LispReader "dispatchMacros")
                    (.setAccessible true))
                  nil)]
+    (debug (cl-format nil "set dispatch reader macro to character '~a'" ch))
     (aset dm (int ch) fun)))
 #+END_SRC
 Pass in a character and an fn and you get a reader macro.
-** a test to uppercase string
-For a silly example let's make reader syntax to uppercase a literal string.
+** a simple test
 #+BEGIN_SRC clojure
-(defn uppercase-string [reader quote opts pending-forms]
-  (clojure.pprint/cl-format true "type of reader:~s~%" (type reader))
-  (let [c (.read reader)]
+(defn uppercase-string [rdr letter-u opts pending-forms]
+  (debug (cl-format nil "uppercase-string:~a" rdr))
+  (let [c (.read rdr)]
     (if (= c (int \"))
       (.toUpperCase (.invoke
                      (clojure.lang.LispReader$StringReader.)
-                     reader
-                     quote opts pending-forms))
+                     rdr
+                     c
+                     opts pending-forms))
       (throw (Exception. (str "Reader barfed on " (char c)))))))
 #+END_SRC
-
-The function is passed a reader and the dispatch character (which you can usually ignore).
-I cheat and use Clojure's StringReader to do the real work.
-
-Now I can do this:
-#+BEGIN_SRC clojure :tangle no
+install it
+#+BEGIN_SRC clojure
 (dispatch-reader-macro \U uppercase-string)
 #+END_SRC
 
-#+BEGIN_SRC clojure :tangle no
-#U"Foo bar BAZ"
-(println #U"foo\nbar")
-#U(blarg)
-(= "FOO" "foo")
-(= "FOO" #U"foo")
+** handle org syntax
+We define a new dispatch function for "# "(sharp space) to enter into org syntax, until it meet ~#+begin_src clojure~.
+#+BEGIN_SRC clojure
+(defn dispatch-sharp-space [reader quote opts pending-forms]
+  (debug "enter into org syntax.")
+  (debug (cl-format nil "in dispatch-sharp-space, reader is ~s" reader))
+  (loop [line (literate-read-line reader)
+         trimmed-line (and line (trim line))]
+    (when (and line (not (starts-with? (lower-case trimmed-line) "#+begin_src clojure")))
+      (debug (cl-format nil "ignore line: ~a" line))
+      (recur (literate-read-line reader) (and line (trim line)))))
+
+  (debug "enter into clojure syntax.")
+  true)
+#+END_SRC
+
+Let's install it.
+#+BEGIN_SRC clojure
+(dispatch-reader-macro \  dispatch-sharp-space)
+#+END_SRC
+** handle end of source code block
+we define a new dispatch function for "#+" (sharp plus) to return back org syntax, until it meet ~#+begin_src clojure~.
+#+BEGIN_SRC clojure
+(defn dispatch-sharp-plus [reader quote opts pending-forms]
+  (let [line (literate-read-line reader)]
+    (debug (cl-format nil "ignore line:~a" line))
+    (debug (cl-format nil "in dispatch-sharp-plus, reader is ~s" reader))
+    (debug "switch back from clojure syntax to org syntax.")
+    )
+  (dispatch-sharp-space reader quote opts pending-forms))
+#+END_SRC
+
+Let's install it.
+#+BEGIN_SRC clojure
+(dispatch-reader-macro \+ dispatch-sharp-plus)
 #+END_SRC
 
 * References
