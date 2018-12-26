@@ -1,15 +1,64 @@
 # -*- encoding:utf-8 Mode: POLY-ORG;  -*- --- 
+#+Title: literate clojure
+#+SubTitle: a literate programming tool to write clojure codes in org mode.
 #+OPTIONS: toc:2
 #+STARTUP: noindent
 #+STARTUP: inlineimages
 
 * Introduction
-todo.
+This is a clojure library to show a way how to use [[http://www.literateprogramming.com/][literate programming]] in clojure.
+
+It extends the clojure read syntax so clojure can load org file as source file directly.
+
+[[https://github.com/limist/literate-programming-examples][literate programming examples]] show the reason why use org mode,
+
+By using clojure package [[https://github.com/jingtaozf/literate-clojure][literate-clojure]] , emacs [[https://orgmode.org/][org mode]] and elisp library [[https://polymode.github.io/][polymode]], 
+literate programming can be easy in one org file containing both documentation and source codes,
+and this org file works well with [[https://github.com/clojure-emacs/cider][cider]].
+
 * how to do it?
-todo.
+In org mode, the comment line start with character ~#~ (see [[https://orgmode.org/manual/Comment-lines.html][org manual]] ), 
+and the lisp codes exists between ~#+begin_src lisp~ and ~#+end_src~ 
+(see [[https://orgmode.org/manual/Literal-examples.html][org manual]]).
+
+#+BEGIN_EXAMPLE
+   ,#+BEGIN_SRC clojure :tangle no
+   (ns literate-clojure.example (:use [clojure.string] [clojure.pprint]))
+   (defn test []
+     (cl-format true "This is a test function.~%"))
+   ,#+END_SRC
+#+END_EXAMPLE
+
+So to let clojure can rean an org file directly, all lines out of surrounding
+by ~#+begin_src clojure~ and ~#+end_src~ should mean nothing,
+and even codes surrounding by them should mean nothing 
+if the [[https://orgmode.org/manual/Code-block-specific-header-arguments.html#Code-block-specific-header-arguments][header arguments]] in a code block request such behavior.
+
+Here is a trick, a new clojure [[https://clojure.org/reference/reader#_dispatch][dispatch]] syntax "# "(sharpsign whitespace) will be defined to make clojure reader enter into org mode syntax,
+then ignore all lines after that until it meet ~#+begin_src clojure~. 
+
+When ~#+begign_src lisp~ occurs, org [[https://orgmode.org/manual/Code-block-specific-header-arguments.html#Code-block-specific-header-arguments][header arguments]] for this code block give us
+a chance to switch back to normal clojure reader or not.
+
+And if it switch back to normal clojure reader, the end line ~#+END_SRC~ should mean the end of current
+code block,so a new clojure [[https://clojure.org/reference/reader#_dispatch][dispatch]] syntax for "#+"(sharp plus)will have an additional meaning 
+to determine if it is ~#+END_SRC~, 
+if it is, then clojure reader will switch back to org mode syntax,
+if it is not, clojure reader will continue to read subsequent stream as like the original clojure reader.
+
+This workflow restricts the org file starting with a comment character and a space character("# "),
+but it should not be a problem but indeed a convenient way for us to specify some local variables,
+for example I often put them in the first line of an org file:
+#+BEGIN_SRC org
+# -*- encoding:utf-8 Mode: POLY-ORG;  -*- --- 
+#+END_SRC
+Which make emacs open file with utf-8 encoding and [[https://github.com/polymode/poly-org][poly-org-mode]].
+
 * Implementation
 ** Preparation
 Let's create a new namespace for this library.
+
+We use logging library [[https://github.com/ptaoussanis/timbre][timbre]] because it is very convenient.
 #+BEGIN_SRC clojure
 (ns literate-clojure.core
   (:use    [clojure.string]
@@ -24,30 +73,34 @@ Let's create a new namespace for this library.
 #+END_SRC
 
 ** stream read operations
-The reader class is [[https://docs.oracle.com/javase/7/docs/api/java/io/PushbackReader.html][PushbackReader]], but it don't provide a ~read line~ operation, let's implement it firstly
+The reader class used by clojure to parse source forms is [[https://docs.oracle.com/javase/7/docs/api/java/io/PushbackReader.html][PushbackReader]], 
+but it don't provide a ~read line~ operation, let's implement it.
+
+Before reading a line, let's define a function to determine whether a character is line terminator.
+#+BEGIN_SRC clojure
+(defn line-terminator? [c]
+  (or (= c (int \return)) (= c (int \newline))))
+#+END_SRC
+
+Now let's implement the operation ~read line~.
 #+BEGIN_SRC clojure
 (defn literate-read-line [reader]
   (let [c (.read reader)]
     (cond (= c -1) nil
-          (= c (int \newline)) ""
+          (line-terminator? c) ""
           :else (with-out-str
                   (do (cl-format *out* "~c" (char c))
                       (loop [c (.read reader)]
-                        (cond (= c -1) nil
-                              (= c (int \newline)) nil
-                              :else (do (cl-format *out* "~c" (char c))
-                                        (recur (.read reader))))))))))
+                        (when (and (not (= c -1))
+                                   (not (line-terminator? c)))
+                          (cl-format *out* "~c" (char c))
+                          (recur (.read reader)))))))))
 #+END_SRC
 ** reader macros
-https://cdaddr.com/programming/clojure-reader-macros/
 Unlike Common Lisp, Clojure doesn't support user-defined reader macros.
-You can read some of the rationale for why in this chat log, among other places.
-I think that's probably a good decision; I don't see a lot of need for mangling the reader.
-Regular macros get you pretty far already and Clojure has built-in reader support for all the good stuff.
 
-But how hard would it be to have custom reader macros in Clojure if you wanted them?
-Turns out not too hard if you're willing to ruthlessly break encapsulation and rely on implementation details.
-Here's one way you could define a dispatch reader macro (i.e. one starting with # and some specified second character):
+Based on clojure's [[https://github.com/clojure/clojure/blob/master/src/jvm/clojure/lang/LispReader.java][LispReader]], it is easy to define a dispatch reader macro 
+(i.e. one starting with # and some specified second character):
 #+BEGIN_SRC clojure
 (defn dispatch-reader-macro [ch fun]
   (let [dm (.get (doto (.getDeclaredField clojure.lang.LispReader "dispatchMacros")
@@ -56,55 +109,40 @@ Here's one way you could define a dispatch reader macro (i.e. one starting with 
     (debug (cl-format nil "set dispatch reader macro to character '~a'" ch))
     (aset dm (int ch) fun)))
 #+END_SRC
-Pass in a character and an fn and you get a reader macro.
-** a simple test
-#+BEGIN_SRC clojure
-(defn uppercase-string [rdr letter-u opts pending-forms]
-  (debug (cl-format nil "uppercase-string:~a" rdr))
-  (let [c (.read rdr)]
-    (if (= c (int \"))
-      (.toUpperCase (.invoke
-                     (clojure.lang.LispReader$StringReader.)
-                     rdr
-                     c
-                     opts pending-forms))
-      (throw (Exception. (str "Reader barfed on " (char c)))))))
-#+END_SRC
-install it
-#+BEGIN_SRC clojure
-(dispatch-reader-macro \U uppercase-string)
-#+END_SRC
 
 ** handle org syntax
-We define a new dispatch function for "# "(sharp space) to enter into org syntax, until it meet ~#+begin_src clojure~.
+Let's define a new dispatch function for "# "(sharp space) to enter into org syntax, until it meet ~#+begin_src clojure~.
+The ~reader~ is returned so  [[https://github.com/clojure/clojure/blob/master/src/jvm/clojure/lang/LispReader.java][LispReader]] will continue to read rest forms with clojure syntax.
 #+BEGIN_SRC clojure
 (defn dispatch-sharp-space [reader quote opts pending-forms]
   (debug "enter into org syntax.")
-  (debug (cl-format nil "in dispatch-sharp-space, reader is ~s" reader))
-  (loop [line (literate-read-line reader)
-         trimmed-line (and line (trim line))]
-    (when (and line (not (starts-with? (lower-case trimmed-line) "#+begin_src clojure")))
-      (debug (cl-format nil "ignore line: ~a" line))
-      (recur (literate-read-line reader) (and line (trim line)))))
+  (loop [line (literate-read-line reader)]
+    (cond (nil? line) (debug "reach end of stream in org syntax.")
+          (starts-with? (lower-case (trim line)) "#+begin_src clojure") (debug "reach begin of code block.")
+          :else (do
+                  (debug (cl-format nil "ignore line: ~a" line))
+                  (recur (literate-read-line reader)))))
 
+  (debug (cl-format nil "current line no:~s, column no:~s" (.getLineNumber reader) (.getColumnNumber reader)))
   (debug "enter into clojure syntax.")
-  true)
+  reader)
 #+END_SRC
 
-Let's install it.
+let's install it.
 #+BEGIN_SRC clojure
-(dispatch-reader-macro \  dispatch-sharp-space)
+(dispatch-reader-macro \space dispatch-sharp-space)
 #+END_SRC
 ** handle end of source code block
-we define a new dispatch function for "#+" (sharp plus) to return back org syntax, until it meet ~#+begin_src clojure~.
+Let's define a new dispatch function for "#+" (sharp plus) to return back org syntax, until it meet ~#+begin_src clojure~.
 #+BEGIN_SRC clojure
 (defn dispatch-sharp-plus [reader quote opts pending-forms]
   (let [line (literate-read-line reader)]
-    (debug (cl-format nil "ignore line:~a" line))
-    (debug (cl-format nil "in dispatch-sharp-plus, reader is ~s" reader))
-    (debug "switch back from clojure syntax to org syntax.")
-    )
-  (dispatch-sharp-space reader quote opts pending-forms))
+    (cond (nil? line) (debug "reach end of stream in org syntax.")
+          (starts-with? (lower-case (trim line)) "end_src")
+          (do (debug "reach begin of code block.")
+              (debug "switch back from clojure syntax to org syntax.")
+              (dispatch-sharp-space reader quote opts pending-forms))
+          :else (throw (Exception. (cl-format nil "invalid syntax in line :~a" line))))))
 #+END_SRC
 
 Let's install it.
@@ -113,5 +151,7 @@ Let's install it.
 #+END_SRC
 
 * References
-https://github.com/klutometis/reader-macros
-https://github.com/lambdatronic/org-babel-example
+- a reader macro library for clojure: https://github.com/klutometis/reader-macros
+- org babel example: https://github.com/lambdatronic/org-babel-example
+- clojure reader macros: https://cdaddr.com/programming/clojure-reader-macros/
+- literate lisp: https://github.com/jingtaozf/literate-lisp

@@ -10,9 +10,9 @@
 - [[#license][License]]
 
 * Introduction
-A Clojure library designed to extend the clojure syntax so it can load org file as source file directly.
+This is a clojure library designed to extend the clojure syntax so it can load org file as source file directly.
 
-*Please don't use this library,it's not published yet.*
+The implementation details of [[https://github.com/jingtaozf/literate-clojure][literate-clojure]] is in file [[./src/literate_clojure/core.org][core.org]] ([[./src/literate_clojure/core.pdf][pdf version]]).
 
 * Usage
 
