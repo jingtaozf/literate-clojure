@@ -5,6 +5,17 @@
 #+STARTUP: noindent
 #+STARTUP: inlineimages
 
+* Table of Contents                                               :noexport:TOC:
+- [[#introduction][Introduction]]
+- [[#how-to-do-it][how to do it?]]
+- [[#implementation][Implementation]]
+  - [[#preparation][Preparation]]
+  - [[#stream-read-operations][stream read operations]]
+  - [[#reader-macros][reader macros]]
+  - [[#handle-org-syntax][handle org syntax]]
+  - [[#handle-end-of-source-code-block][handle end of source code block]]
+- [[#references][References]]
+
 * Introduction
 This is a clojure library to show a way how to use [[http://www.literateprogramming.com/][literate programming]] in clojure.
 
