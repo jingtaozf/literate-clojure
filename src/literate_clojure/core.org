@@ -14,6 +14,7 @@
   - [[#reader-macros][reader macros]]
   - [[#handle-org-syntax][handle org syntax]]
   - [[#handle-end-of-source-code-block][handle end of source code block]]
+  - [[#install-new-dispatcher-functions][install new dispatcher functions]]
 - [[#references][References]]
 
 * Introduction
@@ -72,13 +73,14 @@ Let's create a new namespace for this library.
 We use logging library [[https://github.com/ptaoussanis/timbre][timbre]] because it is very convenient.
 #+BEGIN_SRC clojure
 (ns literate-clojure.core
-  (:use    [clojure.string]
-           [clojure.pprint])
   (:require
     [taoensso.timbre :as timbre
       :refer [log  trace  debug  info  warn  error  fatal  report
               logf tracef debugf infof warnf errorf fatalf reportf
-              spy get-env]])
+              spy get-env]]
+    [clojure.pprint :refer [cl-format]]
+    [clojure.string :refer [starts-with? lower-case trim]]
+    )
   (:import (clojure.lang LispReader
                          LispReader$WrappingReader)))
 #+END_SRC
@@ -89,13 +91,13 @@ but it don't provide a ~read line~ operation, let's implement it.
 
 Before reading a line, let's define a function to determine whether a character is line terminator.
 #+BEGIN_SRC clojure
-(defn line-terminator? [c]
+(defn- line-terminator? [c]
   (or (= c (int \return)) (= c (int \newline))))
 #+END_SRC
 
 Now let's implement the operation ~read line~.
 #+BEGIN_SRC clojure
-(defn literate-read-line [reader]
+(defn- literate-read-line [reader]
   (let [c (.read reader)]
     (cond (= c -1) nil
           (line-terminator? c) ""
@@ -113,19 +115,20 @@ Unlike Common Lisp, Clojure doesn't support user-defined reader macros.
 Based on clojure's [[https://github.com/clojure/clojure/blob/master/src/jvm/clojure/lang/LispReader.java][LispReader]], it is easy to define a dispatch reader macro 
 (i.e. one starting with # and some specified second character):
 #+BEGIN_SRC clojure
-(defn dispatch-reader-macro [ch fun]
+(defn- dispatch-reader-macro [ch fun]
   (let [dm (.get (doto (.getDeclaredField clojure.lang.LispReader "dispatchMacros")
                    (.setAccessible true))
                  nil)]
-    (debug (cl-format nil "set dispatch reader macro to character '~a'" ch))
-    (aset dm (int ch) fun)))
+    (when (nil? (aget dm (int ch)))
+      (debug (cl-format nil "install dispatch reader macro for character '~a'" ch))
+      (aset dm (int ch) fun))))
 #+END_SRC
 
 ** handle org syntax
 Let's define a new dispatch function for "# "(sharp space) to enter into org syntax, until it meet ~#+begin_src clojure~.
-The ~reader~ is returned so  [[https://github.com/clojure/clojure/blob/master/src/jvm/clojure/lang/LispReader.java][LispReader]] will continue to read rest forms with clojure syntax.
+The ~reader~ is returned so [[https://github.com/clojure/clojure/blob/master/src/jvm/clojure/lang/LispReader.java][LispReader]] will continue to read rest forms with clojure syntax.
 #+BEGIN_SRC clojure
-(defn dispatch-sharp-space [reader quote opts pending-forms]
+(defn- dispatch-sharp-space [reader quote opts pending-forms]
   (debug "enter into org syntax.")
   (loop [line (literate-read-line reader)]
     (cond (nil? line) (debug "reach end of stream in org syntax.")
@@ -139,14 +142,10 @@ The ~reader~ is returned so  [[https://github.com/clojure/clojure/blob/master/sr
   reader)
 #+END_SRC
 
-let's install it.
-#+BEGIN_SRC clojure
-(dispatch-reader-macro \space dispatch-sharp-space)
-#+END_SRC
 ** handle end of source code block
 Let's define a new dispatch function for "#+" (sharp plus) to return back org syntax, until it meet ~#+begin_src clojure~.
 #+BEGIN_SRC clojure
-(defn dispatch-sharp-plus [reader quote opts pending-forms]
+(defn- dispatch-sharp-plus [reader quote opts pending-forms]
   (let [line (literate-read-line reader)]
     (cond (nil? line) (debug "reach end of stream in org syntax.")
           (starts-with? (lower-case (trim line)) "end_src")
@@ -155,12 +154,12 @@ Let's define a new dispatch function for "#+" (sharp plus) to return back org sy
               (dispatch-sharp-space reader quote opts pending-forms))
           :else (throw (Exception. (cl-format nil "invalid syntax in line :~a" line))))))
 #+END_SRC
-
-Let's install it.
+** install new dispatcher functions
 #+BEGIN_SRC clojure
-(dispatch-reader-macro \+ dispatch-sharp-plus)
+(defn install-org-dispatcher []
+  (dispatch-reader-macro \+ dispatch-sharp-plus)
+  (dispatch-reader-macro \space dispatch-sharp-space))
 #+END_SRC
-
 * References
 - a reader macro library for clojure: https://github.com/klutometis/reader-macros
 - org babel example: https://github.com/lambdatronic/org-babel-example
