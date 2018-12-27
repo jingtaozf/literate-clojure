@@ -1,0 +1,23 @@
+# -*- encoding:utf-8 Mode: POLY-ORG;  -*- --- Enter into org syntax
+#+Startup: noindent
+* Preparation
+** define a namespace for all test cases.
+#+BEGIN_SRC clojure
+(ns literate-clojure.core-test
+  (:require [clojure.test :refer :all]
+            [literate-clojure.core :refer :all]))
+#+END_SRC
+* Tests
+** tangle?
+#+BEGIN_SRC clojure
+(deftest test-tangle?
+  (let [tangle? #'literate-clojure.core/tangle?
+        read-org-code-block-header-arguments #'literate-clojure.core/read-org-code-block-header-arguments]
+    (is (tangle? (read-org-code-block-header-arguments "#+begin_src clojure")))
+    (is (tangle? (read-org-code-block-header-arguments "  #+begin_src clojure  ")))
+    (is (tangle? (read-org-code-block-header-arguments " #+begin_src clojure :tangle yes")))
+    (is (tangle? (read-org-code-block-header-arguments " #+begin_src clojure :tangle yes  ")))
+    (is (tangle? (read-org-code-block-header-arguments " #+begin_src clojure :tangle yes  ")))
+    (is (not (tangle? (read-org-code-block-header-arguments " #+begin_src clojure :tangle no"))))
+    (is (not (tangle? (read-org-code-block-header-arguments " #+begin_src clojure :tangle no "))))))
+#+END_SRC
