@@ -19,20 +19,20 @@ This library is provided to make litrate programming more happy in clojure,witho
 pain of tangling code from org files.
 
 * Usage
-To use this library, please add dependence in your [[./demo/project.clj]]:
+To use this library, please add dependence in your [[./demo/project.clj][project.clj]]:
 #+BEGIN_SRC clojure
 :dependencies [[org.clojure/clojure "1.9.0"]
-                 [literate-clojure "0.0.0-4-0x30b5-DIRTY"]]
+                 [literate-clojure "0.0.1"]]
 #+END_SRC
 
 Then in one of your [[./demo/src/demo/core.clj][source file]],add the following codes to install the org syntax for clojure reader:
 #+BEGIN_SRC clojure
 (require 'literate-clojure.core)
 (literate-clojure.core/install-org-dispatcher)
-(load-file "src/demo/demo.org")
+(load-file "src/demo/core.org")
 #+END_SRC
-Now you can use [[./demo/src/demo/demo.org][demo.org]] to write your documentation and source codes together,
-and any codes in [[./demo/src/demo/demo.org][demo.org]] will be loaded automatically.
+Now you can use [[./demo/src/demo/core.org][core.org]] to write your documentation and source codes together,
+and any codes in [[./demo/src/demo/core.org][core.org]] will be loaded automatically.
 
 * License
 
