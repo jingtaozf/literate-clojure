@@ -36,7 +36,7 @@ and any codes in [[./demo/src/demo/core.org][core.org]] will be loaded automatic
 
 * License
 
-Copyright © 2018 FIXME
+Copyright © 2018 Jingtao Xu
 
 This program and the accompanying materials are made available under the
 terms of the Eclipse Public License 2.0 which is available at
