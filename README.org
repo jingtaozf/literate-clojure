@@ -34,6 +34,15 @@ Then in one of your [[./demo/src/demo/core.clj][source file]],add the following 
 Now you can use [[./demo/src/demo/core.org][core.org]] to write your documentation and source codes together,
 and any codes in [[./demo/src/demo/core.org][core.org]] will be loaded automatically.
 
+The org files must start with a sharp and a space, for example I usually add the following line
+to the beginning of an org file:
+#+BEGIN_SRC org
+# -*- encoding:utf-8 Mode: POLY-ORG;  -*- --- 
+#+END_SRC
+It will use Emacs library [[https://github.com/polymode/poly-org][poly-org-mode]] which is a lightweight library 
+to support multiple major mode in one file,
+so you can edit clojure code natively in an org file.
+
 * License
 
 Copyright © 2018 Jingtao Xu
