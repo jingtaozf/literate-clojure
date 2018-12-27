@@ -1,2 +1,2 @@
 #!/bin/bash
-lein test :default && cd demo && lein run
+lein test :default && lein install && cd demo && lein run

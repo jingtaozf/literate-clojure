@@ -1,12 +1,5 @@
 # -*- encoding:utf-8 Mode: POLY-ORG;  -*- --- Enter into org syntax
 #+Startup: noindent
-* Preparation
-** define a namespace for all test cases.
-#+BEGIN_SRC clojure
-(ns literate-clojure.core-test
-  (:require [clojure.test :refer :all]
-            [literate-clojure.core :refer :all]))
-#+END_SRC
 * Tests
 ** tangle?
 #+BEGIN_SRC clojure
