@@ -14,7 +14,10 @@ pom.xml.asc
 *.class
 /.lein-*
 /.nrepl-port
+/demo/.lein-*
+/demo/.nrepl-port
 .hgignore
 .hg/
 *.tex
 *.log
+src/literate_clojure/auto/

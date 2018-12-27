@@ -24,7 +24,7 @@ pain of tangling code from org files.
 To use this library, please add dependence in your [[./demo/project.clj][project.clj]]:
 #+BEGIN_SRC clojure
 :dependencies [[org.clojure/clojure "1.9.0"]
-                 [literate-clojure "0.0.1"]]
+               [literate-clojure "0.0.1"]]
 #+END_SRC
 
 Then in one of your [[./demo/src/demo/core.clj][source file]],add the following codes to install the org syntax for clojure reader:
