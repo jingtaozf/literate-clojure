@@ -21,6 +21,30 @@ The implementation details of [[https://github.com/jingtaozf/literate-clojure][l
 This library is provided to make litrate programming more happy in clojure,without
 pain of tangling code from org files.
 
+This library contains the following files:
+- [[./src/literate_clojure/core.org]] \\
+  The implementation and documentation and literate clojure reader.
+- [[./src/literate_clojure/core.clj]] \\
+  The tangled codes of literate clojure reader, generated from [[./src/literate_clojure/core.clj]].
+- [[./src/literate_clojure/core.pdf]] \\
+  The weaved documentation, generated from [[./src/literate_clojure/core.clj]] by org mode's [[https://orgmode.org/manual/Triggering-publication.html#Triggering-publication][publish feature]].
+- [[test/literate_clojure/core_test.org]] \\
+  The testcase of [[https://github.com/jingtaozf/literate-clojure][literate-clojure]]. 
+- [[test/literate_clojure/core_test.clj]] \\
+  The bootstrap file of test cases.
+- [[./README.org]] \\
+  The usage and introduction of [[https://github.com/jingtaozf/literate-clojure][literate-clojure]].
+- [[./project.clj]] \\
+  the lein project file of [[https://github.com/jingtaozf/literate-clojure][literate-clojure]].
+- [[./demo/project.clj]] \\
+  the lein project file of a demo of how to use [[https://github.com/jingtaozf/literate-clojure][literate-clojure]].
+- [[./demo/src/demo/core.org]] \\  
+  The demo documentation and codes. 
+- [[./demo/src/demo/core.clj]] \\  
+  the bootstrap file to load [[./demo/src/demo/core.org]]. 
+- [[./.travis.yml]] \\
+  The config file used by Web service [[https://travis-ci.com/jingtaozf/literate-lisp][travis ci]] to test this library.
+
 * Usage
 To use this library, please add dependence in your [[./demo/project.clj][project.clj]]:
 #+BEGIN_SRC clojure
