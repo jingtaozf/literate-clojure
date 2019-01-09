@@ -33,11 +33,11 @@
       (debug (cl-format nil "install dispatch reader macro for character '~a'" ch))
       (aset dm (int ch) fun))))
 
-(defn- tangle? [arguments]
+(defn- load? [arguments]
   (debug (cl-format nil "header arguments is: ~s" arguments))
   (loop [left-arguments arguments]
     (cond (nil? left-arguments) true
-          (= (first left-arguments) ":tangle")
+          (= (first left-arguments) ":load")
           (case (second left-arguments)
             nil true
             "" true
@@ -45,17 +45,18 @@
             "no" nil)
           :else (recur (next left-arguments)))))
 
-(defn- read-org-code-block-header-arguments [string]
-  (split (lower-case (trim string)) #"\s+"))
-
 (def id-of-begin-src "#+begin_src clojure")
+(defn- read-org-code-block-header-arguments [line]
+  (let [trimmed-line (trim line)]
+    (split (lower-case (.substring trimmed-line (.length id-of-begin-src))) #"\s+")))
+
 (defn- dispatch-sharp-space [reader quote opts pending-forms]
   (debug "enter into org syntax.")
   (loop [line (literate-read-line reader)]
     (cond (nil? line) (debug "reach end of stream in org syntax.")
           (starts-with? (lower-case (trim line)) id-of-begin-src)
           (do (debug "reach begin of code block.")
-              (if (tangle? (read-org-code-block-header-arguments (.substring line (.length id-of-begin-src))))
+              (if (load? (read-org-code-block-header-arguments line))
                 (do 
                   (debug (cl-format nil "current line no:~s, column no:~s" (.getLineNumber reader) (.getColumnNumber reader)))
                   (debug "enter into clojure syntax."))

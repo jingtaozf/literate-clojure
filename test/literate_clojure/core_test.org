@@ -1,16 +1,16 @@
 # -*- encoding:utf-8 Mode: POLY-ORG;  -*- --- Enter into org syntax
 #+Startup: noindent
 * Tests
-** tangle?
+** load?
 #+BEGIN_SRC clojure
-(deftest test-tangle?
-  (let [tangle? #'literate-clojure.core/tangle?
+(deftest test-load?
+  (let [load? #'literate-clojure.core/load?
         read-org-code-block-header-arguments #'literate-clojure.core/read-org-code-block-header-arguments]
-    (is (tangle? (read-org-code-block-header-arguments "#+begin_src clojure")))
-    (is (tangle? (read-org-code-block-header-arguments "  #+begin_src clojure  ")))
-    (is (tangle? (read-org-code-block-header-arguments " #+begin_src clojure :tangle yes")))
-    (is (tangle? (read-org-code-block-header-arguments " #+begin_src clojure :tangle yes  ")))
-    (is (tangle? (read-org-code-block-header-arguments " #+begin_src clojure :tangle yes  ")))
-    (is (not (tangle? (read-org-code-block-header-arguments " #+begin_src clojure :tangle no"))))
-    (is (not (tangle? (read-org-code-block-header-arguments " #+begin_src clojure :tangle no "))))))
+    (is (load? (read-org-code-block-header-arguments "#+begin_src clojure")))
+    (is (load? (read-org-code-block-header-arguments "  #+begin_src clojure  ")))
+    (is (load? (read-org-code-block-header-arguments " #+begin_src clojure :load yes")))
+    (is (load? (read-org-code-block-header-arguments " #+begin_src clojure :load yes  ")))
+    (is (load? (read-org-code-block-header-arguments " #+begin_src clojure :load yes  ")))
+    (is (not (load? (read-org-code-block-header-arguments " #+begin_src clojure :load no"))))
+    (is (not (load? (read-org-code-block-header-arguments " #+begin_src clojure :load no "))))))
 #+END_SRC

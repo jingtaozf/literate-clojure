@@ -1,4 +1,4 @@
-(defproject literate-clojure "0.1.0"
+(defproject literate-clojure "0.1.1"
   :description "a literate programming tool to write clojure in org mode"
   :url "http://github.com/jingtaozf/literate-clojure"
   :license {:name "EPL-2.0"

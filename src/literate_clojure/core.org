@@ -35,7 +35,7 @@ and the lisp codes exists between ~#+begin_src lisp~ and ~#+end_src~
 (see [[https://orgmode.org/manual/Literal-examples.html][org manual]]).
 
 #+BEGIN_EXAMPLE
-   ,#+BEGIN_SRC clojure :tangle no
+   ,#+BEGIN_SRC clojure :load no
    (ns literate-clojure.example (:use [clojure.string] [clojure.pprint]))
    (defn test []
      (cl-format true "This is a test function.~%"))
@@ -123,21 +123,21 @@ Based on clojure's [[https://github.com/clojure/clojure/blob/master/src/jvm/cloj
 ** handle org syntax
 
 There are a lot of different lisp codes occur in one org file, some for function implementation,
-some for demo, so a new [[https://orgmode.org/manual/Structure-of-code-blocks.html][org code block]] [[https://orgmode.org/manual/Code-block-specific-header-arguments.html#Code-block-specific-header-arguments][header argument]]  ~tangle~ to decide to
+some for demo, so a new [[https://orgmode.org/manual/Structure-of-code-blocks.html][org code block]] [[https://orgmode.org/manual/Code-block-specific-header-arguments.html#Code-block-specific-header-arguments][header argument]]  ~load~ to decide to
 read them or not should define,and it has three meanings:
 - yes \\
   It means that current code block should load normally, 
-  it is the default mode when the header argument ~tangle~ is not provided.
+  it is the default mode when the header argument ~load~ is not provided.
 - no \\
   It means that current code block should ignore by lisp reader.
   
 The parameter ~arguments~ is a string vector contains all head block arguments.
 #+BEGIN_SRC clojure
-(defn- tangle? [arguments]
+(defn- load? [arguments]
   (debug (cl-format nil "header arguments is: ~s" arguments))
   (loop [left-arguments arguments]
     (cond (nil? left-arguments) true
-          (= (first left-arguments) ":tangle")
+          (= (first left-arguments) ":load")
           (case (second left-arguments)
             nil true
             "" true
@@ -162,7 +162,7 @@ The ~reader~ is returned so [[https://github.com/clojure/clojure/blob/master/src
     (cond (nil? line) (debug "reach end of stream in org syntax.")
           (starts-with? (lower-case (trim line)) id-of-begin-src)
           (do (debug "reach begin of code block.")
-              (if (tangle? (read-org-code-block-header-arguments line))
+              (if (load? (read-org-code-block-header-arguments line))
                 (do 
                   (debug (cl-format nil "current line no:~s, column no:~s" (.getLineNumber reader) (.getColumnNumber reader)))
                   (debug "enter into clojure syntax."))
@@ -234,7 +234,7 @@ This mechanism is good enough because it will not damage any codes in org code b
             (throw e)))))))
 #+END_SRC
 So if we want to release [[./core.clj]], the following codes should execute:
-#+BEGIN_SRC clojure :tangle no
+#+BEGIN_SRC clojure :load no
 (tangle-file "src/literate_clojure/core.org")
 #+END_SRC
 
