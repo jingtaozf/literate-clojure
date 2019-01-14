@@ -9,7 +9,12 @@
 
 * Table of Contents                                                   :TOC:
 - [[#introduction][Introduction]]
-- [[#usage][Usage]]
+- [[#tutorial][Tutorial]]
+  - [[#install-polymode-in-emacs][install polymode in emacs]]
+  - [[#add-dependence-in-projectclj][Add dependence in project.clj]]
+  - [[#load-org-file][Load org file]]
+  - [[#the-special-requirement-for-org-files][The special requirement for org files]]
+  - [[#a-new-code-block-header-argument-load][a new code block header argument ~load~]]
 - [[#license][License]]
 
 * Introduction
@@ -45,12 +50,20 @@ This library contains the following files:
 - [[./.travis.yml]] \\
   The config file used by Web service [[https://travis-ci.com/jingtaozf/literate-lisp][travis ci]] to test this library.
 
-* Usage
+* Tutorial
+** install polymode in emacs
+It's better to edit the org file with [[https://polymode.github.io/][polymode]],which will make code block use its native file mode. 
+The following elisp scripts in .emacs will install it.
+#+BEGIN_SRC elisp
+(use-package poly-org
+    :ensure t)
+#+END_SRC
+** Add dependence in project.clj
 To use this library, please add dependence in your [[./demo/project.clj][project.clj]]:
 #+BEGIN_SRC clojure
 :dependencies [[literate-clojure "0.1.1"]]
 #+END_SRC
-
+** Load org file
 Then in one of your [[./demo/src/demo/core.clj][source file]],add the following codes to install the org syntax for clojure reader:
 #+BEGIN_SRC clojure
 (require 'literate-clojure.core)
@@ -59,7 +72,7 @@ Then in one of your [[./demo/src/demo/core.clj][source file]],add the following 
 #+END_SRC
 Now you can use [[./demo/src/demo/core.org][core.org]] to write your documentation and source codes together,
 and any codes in [[./demo/src/demo/core.org][core.org]] will be loaded automatically.
-
+** The special requirement for org files
 The org files must start with a sharp and a space, for example I usually add the following line
 to the beginning of an org file:
 #+BEGIN_SRC org
@@ -68,7 +81,8 @@ to the beginning of an org file:
 It will use Emacs library [[https://github.com/polymode/poly-org][poly-org-mode]] which is a lightweight library 
 to support multiple major mode in one file,
 so you can edit clojure code natively in an org file.
-
+** a new code block header argument ~load~
+Please have a look of the section [[./src/literate_clojure/core.org::*handle%20org%20syntax][handle org syntax]] in [[./src/literate_clojure/core.org][./src/literate_clojure/core.org]].
 * License
 
 Copyright © 2018 Jingtao Xu
