@@ -82,7 +82,7 @@ It will use Emacs library [[https://github.com/polymode/poly-org][poly-org-mode]
 to support multiple major mode in one file,
 so you can edit clojure code natively in an org file.
 ** a new code block header argument ~load~
-Please have a look of the section [[./src/literate_clojure/core.org::*handle%20org%20syntax][handle org syntax]] in [[./src/literate_clojure/core.org][./src/literate_clojure/core.org]].
+Please have a look of the section [[./src/literate_clojure/core.org#handle-org-syntax][handle org syntax]] in [[./src/literate_clojure/core.org][./src/literate_clojure/core.org]].
 * License
 
 Copyright © 2018 Jingtao Xu
