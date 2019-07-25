@@ -1,4 +1,3 @@
-(ns demo.literate-core)
 # -*- encoding:utf-8 Mode: POLY-ORG;  -*- --- Enter into org syntax
 #+Startup: noindent
 * this is an example
