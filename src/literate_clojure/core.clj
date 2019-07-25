@@ -5,10 +5,15 @@
 
 (ns literate-clojure.core
   (:require
-    [taoensso.timbre :as timbre :refer [debug get-env]]
     [clojure.pprint :refer [cl-format]]
     [clojure.string :refer [starts-with? lower-case trim split]])
   (:import (clojure.lang LispReader LispReader$WrappingReader)))
+
+(defonce ^:dynamic debug-p nil)
+
+(defn debug [& args]
+  (when debug-p
+    (apply println "literate-clojure: " args)))
 
 (defn- line-terminator? [c]
   (or (= c (int \return)) (= c (int \newline))))

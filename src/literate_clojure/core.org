@@ -69,17 +69,29 @@ Which make emacs open file with utf-8 encoding and [[https://github.com/polymode
 
 * Implementation
 ** Preparation
+*** namespace
 Let's create a new namespace for this library.
 
-We use logging library [[https://github.com/ptaoussanis/timbre][timbre]] because it is very convenient.
 #+BEGIN_SRC clojure
 (ns literate-clojure.core
   (:require
-    [taoensso.timbre :as timbre :refer [debug get-env]]
     [clojure.pprint :refer [cl-format]]
     [clojure.string :refer [starts-with? lower-case trim split]])
   (:import (clojure.lang LispReader LispReader$WrappingReader)))
 #+END_SRC
+*** debug function
+A boolean variable to toggle debug on/off
+#+BEGIN_SRC clojure
+(defonce ^:dynamic debug-p nil)
+#+END_SRC
+
+a debug function to print out some log messages.
+#+BEGIN_SRC clojure
+(defn debug [& args]
+  (when debug-p
+    (apply println "literate-clojure: " args)))
+#+END_SRC
+
 
 ** stream read operations
 The reader class used by clojure to parse source forms is [[https://docs.oracle.com/javase/7/docs/api/java/io/PushbackReader.html][PushbackReader]], 
