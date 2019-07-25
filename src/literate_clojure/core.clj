@@ -83,6 +83,7 @@
 (defn install-org-dispatcher []
   (dispatch-reader-macro \+ dispatch-sharp-plus)
   (dispatch-reader-macro \space dispatch-sharp-space))
+(install-org-dispatcher)
 
 (def exception-id-of-end-of-stream "end-of-litereate-stream")
 (defn tangle-file [org-file]

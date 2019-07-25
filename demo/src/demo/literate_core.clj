@@ -1,8 +1,9 @@
+(ns demo.literate-core)
 # -*- encoding:utf-8 Mode: POLY-ORG;  -*- --- Enter into org syntax
 #+Startup: noindent
 * this is an example
 #+BEGIN_SRC clojure
-;; (ns demo.core)
+(ns demo.literate-core)
 #+END_SRC
 define a function
 #+BEGIN_SRC clojure

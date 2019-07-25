@@ -202,6 +202,7 @@ Let's define a new dispatch function for "#+" (sharp plus) to return back org sy
 (defn install-org-dispatcher []
   (dispatch-reader-macro \+ dispatch-sharp-plus)
   (dispatch-reader-macro \space dispatch-sharp-space))
+(install-org-dispatcher)
 #+END_SRC
 
 ** tangle org file to clojure file
