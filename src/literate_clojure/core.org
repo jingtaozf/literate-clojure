@@ -15,6 +15,7 @@
   - [[#handle-org-syntax][handle org syntax]]
   - [[#handle-end-of-source-code-block][handle end of source code block]]
   - [[#install-new-dispatcher-functions][install new dispatcher functions]]
+  - [[#install-new-dispatcher-functions-to-toolsreader][install new dispatcher functions to tools.reader]]
   - [[#tangle-org-file-to-clojure-file][tangle org file to clojure file]]
 - [[#references][References]]
 
@@ -76,7 +77,8 @@ Let's create a new namespace for this library.
 (ns literate-clojure.core
   (:require
     [clojure.pprint :refer [cl-format]]
-    [clojure.string :refer [starts-with? lower-case trim split]])
+    [clojure.string :refer [starts-with? lower-case trim split]]
+    [clojure.tools.reader])
   (:import (clojure.lang LispReader LispReader$WrappingReader)))
 #+END_SRC
 *** debug function
@@ -130,6 +132,17 @@ Based on clojure's [[https://github.com/clojure/clojure/blob/master/src/jvm/cloj
     (when (nil? (aget dm (int ch)))
       (debug (cl-format nil "install dispatch reader macro for character '~a'" ch))
       (aset dm (int ch) fun))))
+#+END_SRC
+
+#+BEGIN_SRC clojure
+(defn tools.reader.additional-dispatch-macros (ch)
+  )
+(defn dispatch-tools.reader-macro [pairs]
+  (alter-var-root 
+         (var clojure.tools.reader/dispatch-macros)
+         (fn [f]  
+  (doseq [[ch fun] pairs]
+    ))
 #+END_SRC
 
 ** handle org syntax
@@ -204,6 +217,18 @@ Let's define a new dispatch function for "#+" (sharp plus) to return back org sy
   (dispatch-reader-macro \space dispatch-sharp-space))
 (install-org-dispatcher)
 #+END_SRC
+** install new dispatcher functions to tools.reader
+Sadly [[https://github.com/clojure/tools.reader][tools.reader]] use a private function to return dispatch functions(see function [[https://github.com/clojure/tools.reader/blob/master/src/main/clojure/clojure/tools/reader.clj][dispatch-macros]]).
+So we have to advice this function to add new dispatch reader macro.
+#+BEGIN_SRC clojure
+(defn tools.reader.additional-dispatch-macros [orig-fn]
+  #(or (orig-fn %)
+       (case %
+         \+ dispatch-sharp-plus
+         \space dispatch-sharp-space)))
+(alter-var-root (var clojure.tools.reader/dispatch-macros) #'tools.reader.additional-dispatch-macros)
+#+END_SRC
+
 
 ** tangle org file to clojure file
 To build clojure file from an org file, we implement a function ~tangle-file~.

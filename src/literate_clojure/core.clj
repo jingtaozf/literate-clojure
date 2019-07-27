@@ -6,7 +6,8 @@
 (ns literate-clojure.core
   (:require
     [clojure.pprint :refer [cl-format]]
-    [clojure.string :refer [starts-with? lower-case trim split]])
+    [clojure.string :refer [starts-with? lower-case trim split]]
+    [clojure.tools.reader])
   (:import (clojure.lang LispReader LispReader$WrappingReader)))
 
 (defonce ^:dynamic debug-p nil)
@@ -37,6 +38,15 @@
     (when (nil? (aget dm (int ch)))
       (debug (cl-format nil "install dispatch reader macro for character '~a'" ch))
       (aset dm (int ch) fun))))
+
+(defn tools.reader.additional-dispatch-macros (ch)
+  )
+(defn dispatch-tools.reader-macro [pairs]
+  (alter-var-root 
+         (var clojure.tools.reader/dispatch-macros)
+         (fn [f]  
+  (doseq [[ch fun] pairs]
+    ))
 
 (defn- load? [arguments]
   (debug (cl-format nil "header arguments is: ~s" arguments))
@@ -84,6 +94,13 @@
   (dispatch-reader-macro \+ dispatch-sharp-plus)
   (dispatch-reader-macro \space dispatch-sharp-space))
 (install-org-dispatcher)
+
+(defn tools.reader.additional-dispatch-macros [orig-fn]
+  #(or (orig-fn %)
+       (case %
+         \+ dispatch-sharp-plus
+         \space dispatch-sharp-space)))
+(alter-var-root (var clojure.tools.reader/dispatch-macros) #'tools.reader.additional-dispatch-macros)
 
 (def exception-id-of-end-of-stream "end-of-litereate-stream")
 (defn tangle-file [org-file]
