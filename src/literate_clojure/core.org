@@ -134,17 +134,6 @@ Based on clojure's [[https://github.com/clojure/clojure/blob/master/src/jvm/cloj
       (aset dm (int ch) fun))))
 #+END_SRC
 
-#+BEGIN_SRC clojure
-(defn tools.reader.additional-dispatch-macros (ch)
-  )
-(defn dispatch-tools.reader-macro [pairs]
-  (alter-var-root 
-         (var clojure.tools.reader/dispatch-macros)
-         (fn [f]  
-  (doseq [[ch fun] pairs]
-    ))
-#+END_SRC
-
 ** handle org syntax
 
 There are a lot of different lisp codes occur in one org file, some for function implementation,

@@ -39,15 +39,6 @@
       (debug (cl-format nil "install dispatch reader macro for character '~a'" ch))
       (aset dm (int ch) fun))))
 
-(defn tools.reader.additional-dispatch-macros (ch)
-  )
-(defn dispatch-tools.reader-macro [pairs]
-  (alter-var-root 
-         (var clojure.tools.reader/dispatch-macros)
-         (fn [f]  
-  (doseq [[ch fun] pairs]
-    ))
-
 (defn- load? [arguments]
   (debug (cl-format nil "header arguments is: ~s" arguments))
   (loop [left-arguments arguments]
