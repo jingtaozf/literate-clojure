@@ -78,6 +78,7 @@ Let's create a new namespace for this library.
   (:require
     [clojure.pprint :refer [cl-format]]
     [clojure.string :refer [starts-with? lower-case trim split]]
+    [clojure.tools.reader.reader-types :as reader-types]
     [clojure.tools.reader])
   (:import (clojure.lang LispReader LispReader$WrappingReader)))
 #+END_SRC
@@ -96,8 +97,29 @@ a debug function to print out some log messages.
 
 
 ** stream read operations
+The reader class used by clojure and [[https://github.com/clojure/tools.reader][tools.reader]] is different.
+
 The reader class used by clojure to parse source forms is [[https://docs.oracle.com/javase/7/docs/api/java/io/PushbackReader.html][PushbackReader]], 
-but it don't provide a ~read line~ operation, let's implement it.
+and the reader class used by [[https://github.com/clojure/tools.reader][tools.reader]] is different [[https://github.com/clojure/tools.reader/blob/master/src/main/clojure/clojure/tools/reader/reader_types.clj][reader_types]].
+
+We use a dynamic variable to distinguish them
+#+BEGIN_SRC clojure
+(def ^:dynamic tools-reader-p nil)
+#+END_SRC
+
+Let's implement some common read facilities.
+The first one is ~read one character~ by the reader, we will simulate the behavior of [[https://docs.oracle.com/javase/7/docs/api/java/io/PushbackReader.html][PushbackReader]].
+#+BEGIN_SRC clojure
+(defn read-char [reader]
+  (if tools-reader-p
+    (let [c (reader-types/read-char reader)]
+      (if c
+        (int c)
+        -1))
+    (.read reader)))
+#+END_SRC
+
+And now let's implement a ~read line~ operation.
 
 Before reading a line, let's define a function to determine whether a character is line terminator.
 #+BEGIN_SRC clojure
@@ -108,17 +130,18 @@ Before reading a line, let's define a function to determine whether a character 
 Now let's implement the operation ~read line~.
 #+BEGIN_SRC clojure
 (defn- literate-read-line [reader]
-  (let [c (.read reader)]
+  (let [c (read-char reader)]
     (cond (= c -1) nil
           (line-terminator? c) ""
           :else (with-out-str
                   (do (cl-format *out* "~c" (char c))
-                      (loop [c (.read reader)]
+                      (loop [c (read-char reader)]
                         (when (and (not (= c -1))
                                    (not (line-terminator? c)))
                           (cl-format *out* "~c" (char c))
-                          (recur (.read reader)))))))))
+                          (recur (read-char reader)))))))))
 #+END_SRC
+
 ** reader macros
 Unlike Common Lisp, Clojure doesn't support user-defined reader macros.
 
@@ -133,6 +156,7 @@ Based on clojure's [[https://github.com/clojure/clojure/blob/master/src/jvm/cloj
       (debug (cl-format nil "install dispatch reader macro for character '~a'" ch))
       (aset dm (int ch) fun))))
 #+END_SRC
+But it only works in clojure instead of clojurescript, because clojurescript use [[https://github.com/clojure/tools.reader][tools.reader]].
 
 ** handle org syntax
 
@@ -178,13 +202,15 @@ The ~reader~ is returned so [[https://github.com/clojure/clojure/blob/master/src
           (do (debug "reach begin of code block.")
               (if (load? (read-org-code-block-header-arguments line))
                 (do 
-                  (debug (cl-format nil "current line no:~s, column no:~s" (.getLineNumber reader) (.getColumnNumber reader)))
                   (debug "enter into clojure syntax."))
                 (recur (literate-read-line reader))))
           :else (do
                   (debug (cl-format nil "ignore line: ~a" line))
                   (recur (literate-read-line reader)))))
   reader)
+(defn- tools-reader-dispatch-sharp-space [reader quote opts pending-forms]
+  (binding [tools-reader-p true]
+    (dispatch-sharp-space reader quote opts pending-forms)))
 #+END_SRC
 
 ** handle end of source code block
@@ -198,6 +224,9 @@ Let's define a new dispatch function for "#+" (sharp plus) to return back org sy
               (debug "switch back from clojure syntax to org syntax.")
               (dispatch-sharp-space reader quote opts pending-forms))
           :else (throw (Exception. (cl-format nil "invalid syntax in line :~a" line))))))
+(defn- tools-reader-dispatch-sharp-plus [reader quote opts pending-forms]
+  (binding [tools-reader-p true]
+    (dispatch-sharp-plus reader quote opts pending-forms)))
 #+END_SRC
 ** install new dispatcher functions
 #+BEGIN_SRC clojure
@@ -213,8 +242,8 @@ So we have to advice this function to add new dispatch reader macro.
 (defn tools.reader.additional-dispatch-macros [orig-fn]
   #(or (orig-fn %)
        (case %
-         \+ dispatch-sharp-plus
-         \space dispatch-sharp-space)))
+         \+ tools-reader-dispatch-sharp-plus
+         \space tools-reader-dispatch-sharp-space)))
 (alter-var-root (var clojure.tools.reader/dispatch-macros) #'tools.reader.additional-dispatch-macros)
 #+END_SRC
 

@@ -7,6 +7,7 @@
   (:require
     [clojure.pprint :refer [cl-format]]
     [clojure.string :refer [starts-with? lower-case trim split]]
+    [clojure.tools.reader.reader-types :as reader-types]
     [clojure.tools.reader])
   (:import (clojure.lang LispReader LispReader$WrappingReader)))
 
@@ -16,20 +17,30 @@
   (when debug-p
     (apply println "literate-clojure: " args)))
 
+(def ^:dynamic tools-reader-p nil)
+
+(defn read-char [reader]
+  (if tools-reader-p
+    (let [c (reader-types/read-char reader)]
+      (if c
+        (int c)
+        -1))
+    (.read reader)))
+
 (defn- line-terminator? [c]
   (or (= c (int \return)) (= c (int \newline))))
 
 (defn- literate-read-line [reader]
-  (let [c (.read reader)]
+  (let [c (read-char reader)]
     (cond (= c -1) nil
           (line-terminator? c) ""
           :else (with-out-str
                   (do (cl-format *out* "~c" (char c))
-                      (loop [c (.read reader)]
+                      (loop [c (read-char reader)]
                         (when (and (not (= c -1))
                                    (not (line-terminator? c)))
                           (cl-format *out* "~c" (char c))
-                          (recur (.read reader)))))))))
+                          (recur (read-char reader)))))))))
 
 (defn- dispatch-reader-macro [ch fun]
   (let [dm (.get (doto (.getDeclaredField clojure.lang.LispReader "dispatchMacros")
@@ -64,13 +75,15 @@
           (do (debug "reach begin of code block.")
               (if (load? (read-org-code-block-header-arguments line))
                 (do 
-                  (debug (cl-format nil "current line no:~s, column no:~s" (.getLineNumber reader) (.getColumnNumber reader)))
                   (debug "enter into clojure syntax."))
                 (recur (literate-read-line reader))))
           :else (do
                   (debug (cl-format nil "ignore line: ~a" line))
                   (recur (literate-read-line reader)))))
   reader)
+(defn- tools-reader-dispatch-sharp-space [reader quote opts pending-forms]
+  (binding [tools-reader-p true]
+    (dispatch-sharp-space reader quote opts pending-forms)))
 
 (defn- dispatch-sharp-plus [reader quote opts pending-forms]
   (let [line (literate-read-line reader)]
@@ -80,6 +93,9 @@
               (debug "switch back from clojure syntax to org syntax.")
               (dispatch-sharp-space reader quote opts pending-forms))
           :else (throw (Exception. (cl-format nil "invalid syntax in line :~a" line))))))
+(defn- tools-reader-dispatch-sharp-plus [reader quote opts pending-forms]
+  (binding [tools-reader-p true]
+    (dispatch-sharp-plus reader quote opts pending-forms)))
 
 (defn install-org-dispatcher []
   (dispatch-reader-macro \+ dispatch-sharp-plus)
@@ -89,8 +105,8 @@
 (defn tools.reader.additional-dispatch-macros [orig-fn]
   #(or (orig-fn %)
        (case %
-         \+ dispatch-sharp-plus
-         \space dispatch-sharp-space)))
+         \+ tools-reader-dispatch-sharp-plus
+         \space tools-reader-dispatch-sharp-space)))
 (alter-var-root (var clojure.tools.reader/dispatch-macros) #'tools.reader.additional-dispatch-macros)
 
 (def exception-id-of-end-of-stream "end-of-litereate-stream")

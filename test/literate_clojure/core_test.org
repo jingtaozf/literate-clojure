@@ -14,3 +14,8 @@
     (is (not (load? (read-org-code-block-header-arguments " #+begin_src clojure :load no"))))
     (is (not (load? (read-org-code-block-header-arguments " #+begin_src clojure :load no "))))))
 #+END_SRC
+** tools.reader
+#+BEGIN_SRC clojure
+(deftest test-tools.reader
+    (is (clojure.tools.reader/read-string {:eof nil} "# x" )))
+#+END_SRC
