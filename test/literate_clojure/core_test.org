@@ -17,5 +17,5 @@
 ** tools.reader
 #+BEGIN_SRC clojure
 (deftest test-tools.reader
-    (is (clojure.tools.reader/read-string {:eof nil} "# x" )))
+  (is (not (clojure.tools.reader/read-string {:eof nil} "# x" ))))
 #+END_SRC
