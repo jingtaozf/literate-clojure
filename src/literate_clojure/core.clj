@@ -106,7 +106,8 @@
   #(or (orig-fn %)
        (case %
          \+ tools-reader-dispatch-sharp-plus
-         \space tools-reader-dispatch-sharp-space)))
+         \space tools-reader-dispatch-sharp-space
+         nil)))
 (alter-var-root (var clojure.tools.reader/dispatch-macros) #'tools.reader.additional-dispatch-macros)
 
 (def exception-id-of-end-of-stream "end-of-litereate-stream")

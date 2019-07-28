@@ -243,7 +243,8 @@ So we have to advice this function to add new dispatch reader macro.
   #(or (orig-fn %)
        (case %
          \+ tools-reader-dispatch-sharp-plus
-         \space tools-reader-dispatch-sharp-space)))
+         \space tools-reader-dispatch-sharp-space
+         nil)))
 (alter-var-root (var clojure.tools.reader/dispatch-macros) #'tools.reader.additional-dispatch-macros)
 #+END_SRC
 
