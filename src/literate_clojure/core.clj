@@ -109,7 +109,7 @@
          \+ tools-reader-dispatch-sharp-plus
          \space tools-reader-dispatch-sharp-space
          nil)))
-(println "install literate syntax to tools.reader reader.")
+(println "install literate syntax to tools.reader.")
 (alter-var-root (var clojure.tools.reader/dispatch-macros) #'tools.reader.additional-dispatch-macros)
 
 (def exception-id-of-end-of-stream "end-of-litereate-stream")
