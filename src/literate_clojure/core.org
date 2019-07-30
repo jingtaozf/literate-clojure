@@ -233,6 +233,7 @@ Let's define a new dispatch function for "#+" (sharp plus) to return back org sy
 (defn install-org-dispatcher []
   (dispatch-reader-macro \+ dispatch-sharp-plus)
   (dispatch-reader-macro \space dispatch-sharp-space))
+(println "install literate syntax to clojure reader.")
 (install-org-dispatcher)
 #+END_SRC
 ** install new dispatcher functions to tools.reader
@@ -245,6 +246,7 @@ So we have to advice this function to add new dispatch reader macro.
          \+ tools-reader-dispatch-sharp-plus
          \space tools-reader-dispatch-sharp-space
          nil)))
+(println "install literate syntax to tools.reader reader.")
 (alter-var-root (var clojure.tools.reader/dispatch-macros) #'tools.reader.additional-dispatch-macros)
 #+END_SRC
 

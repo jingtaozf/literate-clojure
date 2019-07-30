@@ -100,6 +100,7 @@
 (defn install-org-dispatcher []
   (dispatch-reader-macro \+ dispatch-sharp-plus)
   (dispatch-reader-macro \space dispatch-sharp-space))
+(println "install literate syntax to clojure reader.")
 (install-org-dispatcher)
 
 (defn tools.reader.additional-dispatch-macros [orig-fn]
@@ -108,6 +109,7 @@
          \+ tools-reader-dispatch-sharp-plus
          \space tools-reader-dispatch-sharp-space
          nil)))
+(println "install literate syntax to tools.reader reader.")
 (alter-var-root (var clojure.tools.reader/dispatch-macros) #'tools.reader.additional-dispatch-macros)
 
 (def exception-id-of-end-of-stream "end-of-litereate-stream")
