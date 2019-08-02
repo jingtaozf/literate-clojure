@@ -1,4 +1,4 @@
-# -*- encoding:utf-8 Mode: ORG;  -*- --- Enter into org syntax
+# -*- encoding:utf-8 Mode: ORG; eval: (poly-org-mode 1); -*- --- Enter into org syntax
 #+Startup: noindent
 * this is an example
 #+BEGIN_SRC clojure
