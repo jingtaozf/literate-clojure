@@ -43,10 +43,10 @@ This library contains the following files:
   the lein project file of [[https://github.com/jingtaozf/literate-clojure][literate-clojure]].
 - [[./demo/project.clj]] \\
   the lein project file of a demo of how to use [[https://github.com/jingtaozf/literate-clojure][literate-clojure]].
-- [[./demo/src/demo/core.org]] \\  
+- [[./demo/src/demo/literate_core.clj]] \\  
   The demo documentation and codes. 
 - [[./demo/src/demo/core.clj]] \\  
-  the bootstrap file to load [[./demo/src/demo/core.org]]. 
+  the bootstrap file to load [[./demo/src/demo/literate_core.clj]]. 
 - [[./.travis.yml]] \\
   The config file used by Web service [[https://travis-ci.com/jingtaozf/literate-lisp][travis ci]] to test this library.
 
@@ -58,6 +58,22 @@ The following elisp scripts in .emacs will install it.
 (use-package poly-org
     :ensure t)
 #+END_SRC
+Usually I will add the following line as the first line of an clojure source file (*.clj or *.cljs)
+#+BEGIN_SRC elisp
+# -*- encoding:utf-8 Mode: POLY-ORG;  -*- --- 
+#+END_SRC
+But GitHub will not render such file in org mode, to fix this issue, I will add the following line as the first line instead.
+#+BEGIN_SRC elisp
+# -*- encoding:utf-8 Mode: ORG;  -*- --- 
+#+END_SRC
+And in my Emacs configuration file, I will add a hook to enable [[https://polymode.github.io/][polymode]] for such file:
+#+BEGIN_SRC elisp
+(defun enable-poly-org-mode ()
+  (when (and buffer-file-name (not (string= "org" (downcase (file-name-extension buffer-file-name)))))
+    (poly-org-mode 1)))
+(add-hook 'org-mode-hook 'enable-poly-org-mode)
+#+END_SRC
+So Github can render such source file as org mode correctly.
 ** Add dependence in project.clj
 To use this library, please add dependence in your [[./demo/project.clj][project.clj]]:
 #+BEGIN_SRC clojure
