@@ -1,4 +1,4 @@
-# vim: syntax=org -*- encoding:utf-8 Mode: POLY-ORG; -*- --- Enter into org syntax
+# -*- encoding:utf-8 Mode: POLY-ORG; -*- --- Enter into org syntax
 #+Startup: noindent
 * this is an example
 #+BEGIN_SRC clojure
