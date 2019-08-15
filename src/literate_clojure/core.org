@@ -32,24 +32,30 @@ and this org file works well with [[https://github.com/clojure-emacs/cider][cide
 
 * how to do it?
 In org mode, the comment line start with character ~#~ (see [[https://orgmode.org/manual/Comment-lines.html][org manual]] ), 
-and the lisp codes exists between ~#+begin_src lisp~ and ~#+end_src~ 
+and the clojure codes exists between ~#+begin_src clojure~ and ~#+end_src~ 
 (see [[https://orgmode.org/manual/Literal-examples.html][org manual]]).
 
 #+BEGIN_EXAMPLE
    ,#+BEGIN_SRC clojure :load no
-   (ns literate-clojure.example (:use [clojure.string] [clojure.pprint]))
+   (ns literate-clojure.clojure-example (:use [clojure.pprint]))
    (defn test []
-     (cl-format true "This is a test function.~%"))
+     (pprint "This is a test function."))
+   ,#+END_SRC
+   
+   ,#+BEGIN_SRC clojurescript :load no
+   (ns literate-clojure.clojurescript-example (:use [cljs.pprint :refer [pprint]]))
+   (defn test []
+     (pprint "This is a test function."))
    ,#+END_SRC
 #+END_EXAMPLE
 
 So to let clojure can rean an org file directly, all lines out of surrounding
-by ~#+begin_src clojure~ and ~#+end_src~ should mean nothing,
+by ~#+begin_src~ and ~#+end_src~ should mean nothing,
 and even codes surrounding by them should mean nothing 
 if the [[https://orgmode.org/manual/Code-block-specific-header-arguments.html#Code-block-specific-header-arguments][header arguments]] in a code block request such behavior.
 
 Here is a trick, a new clojure [[https://clojure.org/reference/reader#_dispatch][dispatch]] syntax "# "(sharpsign whitespace) will be defined to make clojure reader enter into org mode syntax,
-then ignore all lines after that until it meet ~#+begin_src clojure~. 
+then ignore all lines after that until it meet ~#+begin_src~. 
 
 When ~#+begign_src lisp~ occurs, org [[https://orgmode.org/manual/Code-block-specific-header-arguments.html#Code-block-specific-header-arguments][header arguments]] for this code block give us
 a chance to switch back to normal clojure reader or not.
@@ -136,7 +142,7 @@ Now let's implement the operation ~read line~.
           :else (with-out-str
                   (do (cl-format *out* "~c" (char c))
                       (loop [c (read-char reader)]
-                        (when (and (not (= c -1))
+                        (when (and (not= c -1)
                                    (not (line-terminator? c)))
                           (cl-format *out* "~c" (char c))
                           (recur (read-char reader)))))))))
@@ -183,12 +189,15 @@ The parameter ~arguments~ is a string vector contains all head block arguments.
             "no" nil)
           :else (recur (next left-arguments)))))
 #+END_SRC
-Let's implement a function to read [[https://orgmode.org/manual/Code-block-specific-header-arguments.html#Code-block-specific-header-arguments][header arguments]] after ~#+BEGIN_SRC clojure~.
+Let's implement a function to read [[https://orgmode.org/manual/Code-block-specific-header-arguments.html#Code-block-specific-header-arguments][header arguments]] after ~#+BEGIN_SRC clojure~ or ~#+BEGIN_SRC clojurescript~ .
 #+BEGIN_SRC clojure
-(def id-of-begin-src "#+begin_src clojure")
+(def id-of-begin-src "#+begin_src")
+(def literate-begin-src-ids (for [lang '("clojure" "clojurescript")]
+                              (format "%s %s" id-of-begin-src lang)))
 (defn- read-org-code-block-header-arguments [line]
   (let [trimmed-line (trim line)]
-    (split (lower-case (.substring trimmed-line (.length id-of-begin-src))) #"\s+")))
+    ;; remove two head tokens.
+    (rest (rest (split (lower-case trimmed-line) #"\s+")))))
 #+END_SRC
 
 Let's define a new dispatch function for "# "(sharp space) to enter into org syntax, until it meet ~#+begin_src clojure~.
@@ -198,11 +207,10 @@ The ~reader~ is returned so [[https://github.com/clojure/clojure/blob/master/src
   (debug "enter into org syntax.")
   (loop [line (literate-read-line reader)]
     (cond (nil? line) (debug "reach end of stream in org syntax.")
-          (starts-with? (lower-case (trim line)) id-of-begin-src)
+          (some #(starts-with? (format "%s " (lower-case (trim line))) (format "%s " %)) literate-begin-src-ids)
           (do (debug "reach begin of code block.")
               (if (load? (read-org-code-block-header-arguments line))
-                (do 
-                  (debug "enter into clojure syntax."))
+                  (debug "enter into clojure syntax.")
                 (recur (literate-read-line reader))))
           :else (do
                   (debug (cl-format nil "ignore line: ~a" line))
@@ -288,7 +296,7 @@ This mechanism is good enough because it will not damage any codes in org code b
           (.write writer "\n")
           (.flush writer))
         (catch Exception e
-          (if (not (= exception-id-of-end-of-stream (.getMessage e)))
+          (if (not= exception-id-of-end-of-stream (.getMessage e))
             ;; we don't know about this exception, throw it again.
             (throw e)))))))
 #+END_SRC

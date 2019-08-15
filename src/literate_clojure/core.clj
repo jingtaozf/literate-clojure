@@ -37,7 +37,7 @@
           :else (with-out-str
                   (do (cl-format *out* "~c" (char c))
                       (loop [c (read-char reader)]
-                        (when (and (not (= c -1))
+                        (when (and (not= c -1)
                                    (not (line-terminator? c)))
                           (cl-format *out* "~c" (char c))
                           (recur (read-char reader)))))))))
@@ -62,20 +62,22 @@
             "no" nil)
           :else (recur (next left-arguments)))))
 
-(def id-of-begin-src "#+begin_src clojure")
+(def id-of-begin-src "#+begin_src")
+(def literate-begin-src-ids (for [lang '("clojure" "clojurescript")]
+                              (format "%s %s" id-of-begin-src lang)))
 (defn- read-org-code-block-header-arguments [line]
   (let [trimmed-line (trim line)]
-    (split (lower-case (.substring trimmed-line (.length id-of-begin-src))) #"\s+")))
+    ;; remove two head tokens.
+    (rest (rest (split (lower-case trimmed-line) #"\s+")))))
 
 (defn- dispatch-sharp-space [reader quote opts pending-forms]
   (debug "enter into org syntax.")
   (loop [line (literate-read-line reader)]
     (cond (nil? line) (debug "reach end of stream in org syntax.")
-          (starts-with? (lower-case (trim line)) id-of-begin-src)
+          (some #(starts-with? (format "%s " (lower-case (trim line))) (format "%s " %)) literate-begin-src-ids)
           (do (debug "reach begin of code block.")
               (if (load? (read-org-code-block-header-arguments line))
-                (do 
-                  (debug "enter into clojure syntax."))
+                  (debug "enter into clojure syntax.")
                 (recur (literate-read-line reader))))
           :else (do
                   (debug (cl-format nil "ignore line: ~a" line))
@@ -140,7 +142,7 @@
           (.write writer "\n")
           (.flush writer))
         (catch Exception e
-          (if (not (= exception-id-of-end-of-stream (.getMessage e)))
+          (if (not= exception-id-of-end-of-stream (.getMessage e))
             ;; we don't know about this exception, throw it again.
             (throw e)))))))
 

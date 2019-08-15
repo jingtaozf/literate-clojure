@@ -11,6 +11,8 @@
     (is (load? (read-org-code-block-header-arguments " #+begin_src clojure :load yes")))
     (is (load? (read-org-code-block-header-arguments " #+begin_src clojure :load yes  ")))
     (is (load? (read-org-code-block-header-arguments " #+begin_src clojure :load yes  ")))
+    (is (load? (read-org-code-block-header-arguments " #+begin_src clojurescript :load yes  ")))
+    (is (not (load? (read-org-code-block-header-arguments " #+begin_src clojurescript :load no"))))
     (is (not (load? (read-org-code-block-header-arguments " #+begin_src clojure :load no"))))
     (is (not (load? (read-org-code-block-header-arguments " #+begin_src clojure :load no "))))))
 #+END_SRC
