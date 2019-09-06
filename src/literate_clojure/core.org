@@ -1,4 +1,4 @@
-# -*- encoding:utf-8 Mode: POLY-ORG;  -*- --- 
+# -*- encoding:utf-8; Mode: POLY-ORG; literate-lang: clojure; literate-load: yes   -*- --- 
 #+Title: literate clojure
 #+SubTitle: a literate programming tool to write clojure codes in org mode.
 #+OPTIONS: toc:2
@@ -237,10 +237,13 @@ Let's define a new dispatch function for "#+" (sharp plus) to return back org sy
     (dispatch-sharp-plus reader quote opts pending-forms)))
 #+END_SRC
 ** install new dispatcher functions
+We make ~install-org-dispatcher~ accept as possible as many args so it can be a  dummy handler for other module, for example 
+warning handler of clojurescript.
 #+BEGIN_SRC clojure
-(defn install-org-dispatcher []
-  (dispatch-reader-macro \+ dispatch-sharp-plus)
-  (dispatch-reader-macro \space dispatch-sharp-space))
+(defn install-org-dispatcher [& args]
+  (when-not args
+    (dispatch-reader-macro \+ dispatch-sharp-plus)
+    (dispatch-reader-macro \space dispatch-sharp-space)))
 (println "install literate syntax to clojure reader.")
 (install-org-dispatcher)
 #+END_SRC

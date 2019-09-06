@@ -99,9 +99,10 @@
   (binding [tools-reader-p true]
     (dispatch-sharp-plus reader quote opts pending-forms)))
 
-(defn install-org-dispatcher []
-  (dispatch-reader-macro \+ dispatch-sharp-plus)
-  (dispatch-reader-macro \space dispatch-sharp-space))
+(defn install-org-dispatcher [& args]
+  (when-not args
+    (dispatch-reader-macro \+ dispatch-sharp-plus)
+    (dispatch-reader-macro \space dispatch-sharp-space)))
 (println "install literate syntax to clojure reader.")
 (install-org-dispatcher)
 

@@ -1,4 +1,4 @@
-# -*- encoding:utf-8 Mode: ORG; -*- --- Enter into org syntax
+# -*- encoding:utf-8; Mode: ORG; literate-lang: clojure; literate-load: yes   -*- --- 
 #+Startup: noindent
 * this is an example
 #+BEGIN_SRC clojure
