@@ -6,6 +6,7 @@
 #+INFOJS_OPT:  view:nil toc:nil ltoc:t mouse:underline buttons:0 path:http://orgmode.org/org-info.js
 [[https://clojars.org/literate-clojure][file:https://img.shields.io/clojars/v/literate-clojure.svg]]
 [[https://travis-ci.com/jingtaozf/literate-clojure][file:https://travis-ci.com/jingtaozf/literate-clojure.svg?branch=master]]
+[[https://github.com/jingtaozf/literate-clojure/actions][file:https://github.com/jingtaozf/literate-clojure/workflows/Clojure%20CI/badge.svg]]
 
 * Table of Contents                                                   :TOC:
 - [[#introduction][Introduction]]
