@@ -12,7 +12,7 @@
 - [[#introduction][Introduction]]
 - [[#tutorial][Tutorial]]
   - [[#install-polymode-in-emacs][install polymode in emacs]]
-  - [[#setup-emacs-to-insert-org-code-blocks][setup emacs to insert org code blocks]]
+  - [[#how-to-insert-code-block-quickly][how to insert code block quickly]]
   - [[#add-dependence-in-projectclj][Add dependence in project.clj]]
   - [[#load-org-file][Load org file]]
   - [[#the-special-requirement-for-org-files][The special requirement for org files]]
@@ -76,75 +76,8 @@ And in my Emacs configuration file, I will add a hook to enable [[https://polymo
 (add-hook 'org-mode-hook 'enable-poly-org-mode)
 #+END_SRC
 So Github can render such source file as org mode correctly.
-** setup emacs to insert org code blocks
-*** define buffer local variables to specifiy current literate language and default load type
-#+BEGIN_SRC elisp
-(defvar literate-lang nil)
-(make-variable-buffer-local 'literate-lang)
-(defvar literate-load nil)
-(make-variable-buffer-local 'literate-load)
-#+END_SRC
-so you can add them in first line of file like this:
-#+BEGIN_SRC org
-# -*- encoding:utf-8; Mode: ORG; literate-lang: clojure; literate-load: yes -*- --- 
-#+END_SRC
-*** create an emacs command to insert them automatically
-#+BEGIN_SRC elisp
-(defun org-insert-src-block ()
-  "Insert the source code section in `org-mode'."
-  (interactive)
-  (let* ((src-type-str
-           (if literate-lang
-             (format "%s" literate-lang)
-             (let* ((result nil)
-                    (source
-                      `((name . ,(concat "Source code type (default " org-src-lang-default "): "))
-                        (candidates . ("lisp" "elisp" "axiom" "spad" "python" "C" "sh" "java" "js" "clojure" "clojurescript" "C++" "css"
-                                              "calc" "asymptote" "dot" "gnuplot" "ledger" "lilypond" "mscgen"
-                                              "octave" "oz" "plantuml" "R" "sass" "screen" "sql" "awk" "ditaa"
-                                              "haskell" "latex" "lisp" "matlab" "ocaml" "org" "perl" "ruby"
-                                              "scheme" "sqlite"))
-                        (action . (("Use it!" . (lambda (selection)
-                                                  (setf result selection))))))))
-               (helm :sources (list source) :buffer "*target babel language*" :input org-src-lang-default)
-               result)))
-         (available-load-types (cond ((string= "lisp" src-type-str)
-                                      '("yes" "no" "test"))
-                                     ((string= "elisp" src-type-str)
-                                      '("yes" "no" "test"))
-                                     ((string= "clojure" src-type-str)
-                                      '("yes" "no"))
-                                     (t nil)))
-         (default-load-type (when (and available-load-types
-                                       (find (gethash src-type-str org-src-load-type-hash) available-load-types
-                                             :test #'string=))
-                              (gethash src-type-str org-src-load-type-hash)))
-         (load-type
-           (if literate-load
-             (format "%s" literate-load)
-             (and available-load-types
-                  (ido-completing-read (concat "load type (default " default-load-type "): ")
-                                       (if default-load-type
-                                         (cons default-load-type available-load-types)
-                                         available-load-types)
-                                       nil nil nil nil default-load-type)))))
-    
-    (when src-type-str
-      (setq org-src-lang-default src-type-str)
-      (setf (gethash load-type org-src-load-type-hash) load-type)
-      (unless (= (line-end-position) (line-beginning-position))
-        ;; only add a new line if it is not a empty line
-        (evil-insert-newline-below))
-      (insert (format "#+BEGIN_SRC %s" src-type-str)
-              (if (or (null load-type) (string= "yes" load-type))
-                ""
-                (format " :load %s" load-type))
-              "\n")
-      (newline)
-      (insert "#+END_SRC\n")
-      (forward-line -2))))
-#+END_SRC
-
+** how to insert code block quickly
+Please have a look of the section [[https://github.com/jingtaozf/literate-elisp/blob/master/literate-elisp.org#how-to-insert-code-block-in-org-file][How to insert code block in org file]] in library [[https://github.com/jingtaozf/literate-elisp][literate-lisp]].
 ** Add dependence in project.clj
 To use this library, please add dependence in your [[./demo/project.clj][project.clj]]:
 #+BEGIN_SRC clojure
