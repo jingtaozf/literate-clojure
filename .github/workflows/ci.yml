@@ -14,5 +14,5 @@ jobs:
     - name: Run tests
       run: lein test :default
     - name: run/test demo
-      run: lein install && cd demo && lein run
+      run: lein install && cd demo && lein run && LITERATE_LOAD_TAGS=dev lein run
       

@@ -1,3 +1,3 @@
 language: clojure
 script:
-  - lein test :default && lein install && cd demo && lein run
+  - lein test :default && lein install && cd demo && lein run && LITERATE_LOAD_TAGS=dev lein run
