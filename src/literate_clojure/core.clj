@@ -50,17 +50,24 @@
       (debug (cl-format nil "install dispatch reader macro for character '~a'" ch))
       (aset dm (int ch) fun))))
 
+(def load-tags
+  (distinct (concat (if-let [tags (System/getenv "LITERATE_LOAD_TAGS")]
+                      (split tags #","))
+                    (if-let [tags (System/getProperty "literate-clojure.load.tags")]
+                      (split tags #",")))))
+
 (defn- load? [arguments]
   (debug (cl-format nil "header arguments is: ~s" arguments))
   (loop [left-arguments arguments]
-    (cond (nil? left-arguments) true
-          (= (first left-arguments) ":load")
-          (case (second left-arguments)
-            nil true
-            "" true
-            "yes" true
-            "no" nil)
-          :else (recur (next left-arguments)))))
+    (cond (empty? left-arguments) true
+          (= (first left-arguments) ":load") (let [load-tag (second left-arguments)]
+                                               (cond (empty? load-tag) true
+                                                     (= "yes" load-tag) true
+                                                     (= "no" load-tag) nil
+                                                     (some #(= % load-tag) load-tags) true))
+
+          :else (if-let [left-arguments (next left-arguments)]
+                  (recur left-arguments)))))
 
 (def id-of-begin-src "#+begin_src")
 (def literate-begin-src-ids (for [lang '("clojure" "clojurescript")]

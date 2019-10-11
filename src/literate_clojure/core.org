@@ -1,9 +1,11 @@
-# -*- encoding:utf-8; Mode: POLY-ORG; literate-lang: clojure; literate-load: yes   -*- --- 
+# -*- encoding:utf-8; Mode: POLY-ORG; -*- ---
 #+Title: literate clojure
 #+SubTitle: a literate programming tool to write clojure codes in org mode.
-#+OPTIONS: toc:2
+#+OPTIONS: toc:2 \n:nil @:t ::t |:t ^:nil -:t f:t *:t <:t
 #+STARTUP: noindent
 #+STARTUP: inlineimages
+#+PROPERTY: literate-lang clojure
+#+PROPERTY: literate-load yes
 
 * Table of Contents                                               :noexport:TOC:
 - [[#introduction][Introduction]]
@@ -17,6 +19,7 @@
   - [[#install-new-dispatcher-functions][install new dispatcher functions]]
   - [[#install-new-dispatcher-functions-to-toolsreader][install new dispatcher functions to tools.reader]]
   - [[#tangle-org-file-to-clojure-file][tangle org file to clojure file]]
+- [[#release-this-org-file][Release this org file]]
 - [[#references][References]]
 
 * Introduction
@@ -26,13 +29,13 @@ It extends the clojure read syntax so clojure can load org file as source file d
 
 [[https://github.com/limist/literate-programming-examples][literate programming examples]] show the reason why use org mode,
 
-By using clojure package [[https://github.com/jingtaozf/literate-clojure][literate-clojure]] , emacs [[https://orgmode.org/][org mode]] and elisp library [[https://polymode.github.io/][polymode]], 
+By using clojure package [[https://github.com/jingtaozf/literate-clojure][literate-clojure]] , emacs [[https://orgmode.org/][org mode]] and elisp library [[https://polymode.github.io/][polymode]],
 literate programming can be easy in one org file containing both documentation and source codes,
 and this org file works well with [[https://github.com/clojure-emacs/cider][cider]].
 
 * how to do it?
-In org mode, the comment line start with character ~#~ (see [[https://orgmode.org/manual/Comment-lines.html][org manual]] ), 
-and the clojure codes exists between ~#+begin_src clojure~ and ~#+end_src~ 
+In org mode, the comment line start with character ~#~ (see [[https://orgmode.org/manual/Comment-lines.html][org manual]] ),
+and the clojure codes exists between ~#+begin_src clojure~ and ~#+end_src~
 (see [[https://orgmode.org/manual/Literal-examples.html][org manual]]).
 
 #+BEGIN_EXAMPLE
@@ -41,7 +44,7 @@ and the clojure codes exists between ~#+begin_src clojure~ and ~#+end_src~
    (defn test []
      (pprint "This is a test function."))
    ,#+END_SRC
-   
+
    ,#+BEGIN_SRC clojurescript :load no
    (ns literate-clojure.clojurescript-example (:use [cljs.pprint :refer [pprint]]))
    (defn test []
@@ -51,18 +54,18 @@ and the clojure codes exists between ~#+begin_src clojure~ and ~#+end_src~
 
 So to let clojure can rean an org file directly, all lines out of surrounding
 by ~#+begin_src~ and ~#+end_src~ should mean nothing,
-and even codes surrounding by them should mean nothing 
+and even codes surrounding by them should mean nothing
 if the [[https://orgmode.org/manual/Code-block-specific-header-arguments.html#Code-block-specific-header-arguments][header arguments]] in a code block request such behavior.
 
 Here is a trick, a new clojure [[https://clojure.org/reference/reader#_dispatch][dispatch]] syntax "# "(sharpsign whitespace) will be defined to make clojure reader enter into org mode syntax,
-then ignore all lines after that until it meet ~#+begin_src~. 
+then ignore all lines after that until it meet ~#+begin_src~.
 
 When ~#+begign_src lisp~ occurs, org [[https://orgmode.org/manual/Code-block-specific-header-arguments.html#Code-block-specific-header-arguments][header arguments]] for this code block give us
 a chance to switch back to normal clojure reader or not.
 
 And if it switch back to normal clojure reader, the end line ~#+END_SRC~ should mean the end of current
-code block,so a new clojure [[https://clojure.org/reference/reader#_dispatch][dispatch]] syntax for "#+"(sharp plus)will have an additional meaning 
-to determine if it is ~#+END_SRC~, 
+code block,so a new clojure [[https://clojure.org/reference/reader#_dispatch][dispatch]] syntax for "#+"(sharp plus)will have an additional meaning
+to determine if it is ~#+END_SRC~,
 if it is, then clojure reader will switch back to org mode syntax,
 if it is not, clojure reader will continue to read subsequent stream as like the original clojure reader.
 
@@ -70,7 +73,7 @@ This workflow restricts the org file starting with a comment character and a spa
 but it should not be a problem but indeed a convenient way for us to specify some local variables,
 for example I often put them in the first line of an org file:
 #+BEGIN_SRC org
-# -*- encoding:utf-8 Mode: POLY-ORG;  -*- --- 
+# -*- encoding:utf-8 Mode: POLY-ORG;  -*- ---
 #+END_SRC
 Which make emacs open file with utf-8 encoding and [[https://github.com/polymode/poly-org][poly-org-mode]].
 
@@ -105,7 +108,7 @@ a debug function to print out some log messages.
 ** stream read operations
 The reader class used by clojure and [[https://github.com/clojure/tools.reader][tools.reader]] is different.
 
-The reader class used by clojure to parse source forms is [[https://docs.oracle.com/javase/7/docs/api/java/io/PushbackReader.html][PushbackReader]], 
+The reader class used by clojure to parse source forms is [[https://docs.oracle.com/javase/7/docs/api/java/io/PushbackReader.html][PushbackReader]],
 and the reader class used by [[https://github.com/clojure/tools.reader][tools.reader]] is different [[https://github.com/clojure/tools.reader/blob/master/src/main/clojure/clojure/tools/reader/reader_types.clj][reader_types]].
 
 We use a dynamic variable to distinguish them
@@ -151,7 +154,7 @@ Now let's implement the operation ~read line~.
 ** reader macros
 Unlike Common Lisp, Clojure doesn't support user-defined reader macros.
 
-Based on clojure's [[https://github.com/clojure/clojure/blob/master/src/jvm/clojure/lang/LispReader.java][LispReader]], it is easy to define a dispatch reader macro 
+Based on clojure's [[https://github.com/clojure/clojure/blob/master/src/jvm/clojure/lang/LispReader.java][LispReader]], it is easy to define a dispatch reader macro
 (i.e. one starting with # and some specified second character):
 #+BEGIN_SRC clojure
 (defn- dispatch-reader-macro [ch fun]
@@ -170,24 +173,37 @@ There are a lot of different lisp codes occur in one org file, some for function
 some for demo, so a new [[https://orgmode.org/manual/Structure-of-code-blocks.html][org code block]] [[https://orgmode.org/manual/Code-block-specific-header-arguments.html#Code-block-specific-header-arguments][header argument]]  ~load~ to decide to
 read them or not should define,and it has three meanings:
 - yes \\
-  It means that current code block should load normally, 
+  It means that current code block should load normally,
   it is the default mode when the header argument ~load~ is not provided.
 - no \\
   It means that current code block should ignore by lisp reader.
-  
+- other tags registered in a system environment variable ~LITERATE_LOAD_TAGS~ or a system property ~literate-clojure.load.tags~
+
+  The tags string in above variables are separated by commas, for example ~dev~ or ~dev,test~.
+  So users can load different kind of codes depend on their demand.
+
+#+BEGIN_SRC clojure
+(def load-tags
+  (distinct (concat (if-let [tags (System/getenv "LITERATE_LOAD_TAGS")]
+                      (split tags #","))
+                    (if-let [tags (System/getProperty "literate-clojure.load.tags")]
+                      (split tags #",")))))
+#+END_SRC
+
 The parameter ~arguments~ is a string vector contains all head block arguments.
 #+BEGIN_SRC clojure
 (defn- load? [arguments]
   (debug (cl-format nil "header arguments is: ~s" arguments))
   (loop [left-arguments arguments]
-    (cond (nil? left-arguments) true
-          (= (first left-arguments) ":load")
-          (case (second left-arguments)
-            nil true
-            "" true
-            "yes" true
-            "no" nil)
-          :else (recur (next left-arguments)))))
+    (cond (empty? left-arguments) true
+          (= (first left-arguments) ":load") (let [load-tag (second left-arguments)]
+                                               (cond (empty? load-tag) true
+                                                     (= "yes" load-tag) true
+                                                     (= "no" load-tag) nil
+                                                     (some #(= % load-tag) load-tags) true))
+
+          :else (if-let [left-arguments (next left-arguments)]
+                  (recur left-arguments)))))
 #+END_SRC
 Let's implement a function to read [[https://orgmode.org/manual/Code-block-specific-header-arguments.html#Code-block-specific-header-arguments][header arguments]] after ~#+BEGIN_SRC clojure~ or ~#+BEGIN_SRC clojurescript~ .
 #+BEGIN_SRC clojure
@@ -237,7 +253,7 @@ Let's define a new dispatch function for "#+" (sharp plus) to return back org sy
     (dispatch-sharp-plus reader quote opts pending-forms)))
 #+END_SRC
 ** install new dispatcher functions
-We make ~install-org-dispatcher~ accept as possible as many args so it can be a  dummy handler for other module, for example 
+We make ~install-org-dispatcher~ accept as possible as many args so it can be a  dummy handler for other module, for example
 warning handler of clojurescript.
 #+BEGIN_SRC clojure
 (defn install-org-dispatcher [& args]
@@ -265,7 +281,7 @@ So we have to advice this function to add new dispatch reader macro.
 ** tangle org file to clojure file
 To build clojure file from an org file, we implement a function ~tangle-file~.
 
-The basic method is simple here, we use function ~dispatch-sharp-space~ 
+The basic method is simple here, we use function ~dispatch-sharp-space~
 to ignore all lines should be ignored,
 then export all code lines until we reach ~#+end_src~, this process is repeated to end of org file.
 
@@ -303,7 +319,8 @@ This mechanism is good enough because it will not damage any codes in org code b
             ;; we don't know about this exception, throw it again.
             (throw e)))))))
 #+END_SRC
-So if we want to release [[./core.clj]], the following codes should execute:
+* Release this org file
+If we want to release to [[./core.clj]], the following codes should execute:
 #+BEGIN_SRC clojure :load no
 (tangle-file "src/literate_clojure/core.org")
 #+END_SRC
