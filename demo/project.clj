@@ -3,8 +3,10 @@
   :url "https://github.com/jingtaozf/literate-clojure"
   :license {:name "EPL-2.0"
             :url "https://www.eclipse.org/legal/epl-2.0/"}
-  :dependencies [[org.clojure/clojure "1.9.0"]
-                 [literate-clojure "0.3.0"]]
+  :dependencies [[org.clojure/clojure "1.10.0"]
+                 [literate-clojure "0.3.0"]
+                 [dorothy "0.0.6"]
+                 ]
   :injections [(require 'literate-clojure.core)]
   :main ^:skip-aot demo.core
   :target-path "target/%s"
