@@ -28,6 +28,7 @@
   - [[#1-how-to-represent-a-directed-graph][1. How to represent a directed graph]]
   - [[#2-an-algorithm-to-randomly-generate-a-simple-directed-graph][2. An algorithm to randomly generate a simple directed graph]]
   - [[#3-write-an-implementation-of-dijkstras-algorithm-1][3. Write an implementation of Dijkstra's algorithm]]
+  - [[#4-write-a-suite-of-functions-to-calculate-distance-properties-for-your-graph-1][4. Write a suite of functions to calculate distance properties for your graph.]]
 
 * Introduction
 This is a demo code for graph traversal, to pass the [[https://bitbucket.org/audiencerepublic/developer-test/wiki/clojure-2][developer test]] based on article [[http://hueypetersen.com/posts/2013/06/25/graph-traversal-with-clojure/][Graph Traversal with Clojure]].
@@ -391,4 +392,5 @@ So you can define a graph and visualize it like this
 (render-graph random-graph "docs/images/random-graph.png")
 #+END_SRC
 [[../../docs/images/random-graph.png]]
-** 3. Write an implementation of [[https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm][Dijkstra's algorithm]]
+** TODO 3. Write an implementation of [[https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm][Dijkstra's algorithm]]
+** TODO 4. Write a suite of functions to calculate distance properties for your graph.
