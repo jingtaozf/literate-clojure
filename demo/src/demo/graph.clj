@@ -325,7 +325,7 @@ And we can choose random edges after a =shuffle= like this:
 #+END_SRC
 We will sort the edges to meet the rule 4 in our definition.
 
-We can get the start vertex of an edge =A= by such calculation:
+We can get the start vertex =A= of an edge by such calculation:
 #+BEGIN_SRC clojure
 (defn edge-start-vertex [N edge-id]
   (int (/ (dec edge-id) N)))
