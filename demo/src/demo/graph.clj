@@ -354,7 +354,7 @@ Then we can extract edges for each vertex and build it to a graph like this:
     ;; convert into a sorted map for a better readability.
     (into (sorted-map) graph)
     ;; add lacked vertices which don't have any edge for a better readability.
-    (merge graph (apply sorted-map (reduce (fn[keyvals vertex-id]
+    (merge graph (apply sorted-map (reduce (fn [keyvals vertex-id]
                                              (concat keyvals [vertex-id []]))
                                            {} (apply (partial disj (set (range 1 (inc N))))
                                                      (keys graph)))))))
@@ -365,7 +365,7 @@ We can visualize this graph into a picture via [[https://github.com/daveray/doro
 (defn render-graph [graph graph-file]
   (-> (reduce (fn [ret vertex]
                 (concat ret (map
-                             (fn[edge]
+                             (fn [edge]
                                [vertex (first edge) {:label (second edge)}])
                              (edges graph vertex))))
               [] (keys graph))
