@@ -296,10 +296,10 @@ For our random graph =G(N S)=, we will apply the following rules
 1. The vertices are integers from =1= to =N=.
 2. Only a connection from a smaller vertex name to a larger vetex name is allowed.
 3. The weight for an edge is a random integer value between =1= and =10=.
-#+BEGIN_SRC clojure
-(defn random-weight []
-  (inc (rand-int 10)))
-#+END_SRC
+   #+BEGIN_SRC clojure
+   (defn random-weight []
+     (inc (rand-int 10)))
+   #+END_SRC
 4. The edges for a vertex is sorted ascendingly by its target vertex.
    - It will give a better readability to our graph data.
 
