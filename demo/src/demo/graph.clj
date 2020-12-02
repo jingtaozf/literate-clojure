@@ -490,7 +490,7 @@ To extract path from the =prev= section, please note that:
 
 Now you can get the shortest path between two vertices like this:
 #+BEGIN_SRC clojure :load no
-(def random-graph G(10,10))
+(def random-graph (G 10 10))
 (D random-graph (first (keys random-graph)) (last (keys random-graph)))
 (D random-graph 1 10)
 #+END_SRC
