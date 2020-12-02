@@ -296,7 +296,6 @@ This section show the answers for above questions.
 ** 1. How to represent a directed graph
 To represent a directed graph with weight, we will use
 - a unique integer as the vertex name
-  - Actually it can be any valid key name of a map in our implementation.
   - We will not use a =keyword= as the vertex name to avoid introducing additional keywords to Clojure namespace.
 - an array containing a list of tuples with the vertex name and the weight
 
@@ -320,7 +319,6 @@ To create a new edge
   [edge-vertex weight])
 #+END_SRC
 
-
 And edge target vertex is its first element in the tuple.
 #+BEGIN_SRC clojure
 (defn edge-vertex [edge]
@@ -331,7 +329,6 @@ Edge weight is its second element in the tuple.
 (defn edge-weight [edge]
   (second edge))
 #+END_SRC
-
 
 ** 2. An algorithm to randomly generate a simple directed graph
 Such that
@@ -407,8 +404,9 @@ Then we can extract edges for each vertex and build it to a graph like this:
     ;; add lacked vertices which don't have any edge for a better readability.
     (merge graph (apply sorted-map (reduce (fn [keyvals vertex-id]
                                              (concat keyvals [vertex-id []]))
-                                           {} (apply (partial disj (set (range 1 (inc N))))
-                                                     (keys graph)))))))
+                                           {}
+                                           (apply (partial disj (set (range 1 (inc N))))
+                                                  (keys graph)))))))
 #+END_SRC
 
 We can visualize this graph into a picture via [[https://github.com/daveray/dorothy][graphviz DOT]].
@@ -450,7 +448,7 @@ filling the priority queue with all nodes, we initialize it to contain only sour
 so we just list the steps of it here with some notes for our implementation.
 
 1. Mark all nodes unvisited. Create a set of all the unvisited nodes called the unvisited set.
-   - ~In this implementation~, it is unvisited if the vertex is not in the map =dist=.
+   - ~In this implementation~, it is unvisited if the vertex is not in the map =explored=.
 2. Assign to every node a tentative distance value:
    set it to zero for our initial node and to infinity for all other nodes.
    Set the initial node as current
@@ -466,7 +464,9 @@ so we just list the steps of it here with some notes for our implementation.
    or if the smallest tentative distance among the nodes in the unvisited set is infinity (when planning a complete traversal;
    occurs when there is no connection between the initial node and remaining unvisited nodes), then stop.
    The algorithm has finished.
-   - ~in this implementation~, if we can't meet the =goal= vertex, then it will return =##Inf=.
+   - ~in this implementation~, if we can't meet the =goal= vertex, then it will return path as =nil=.
+   - ~in this implementation~, if the path from vertex =start= to =goal= is a direct connection, it will
+     return an empty list =()=
 6. Otherwise, select the unvisited node that is marked with the smallest tentative distance,
    set it as the new "current node", and go back to step 3.
 
@@ -492,15 +492,14 @@ Before process edges for current vertex, we will mark it as explored and pop fro
 (defn D [G start goal]
   (loop [data (D-initialized-data start)]
     ;; return best vertex
-    (if-let [[v d] (peek (:Q data))]
+    (when-let [[v d] (peek (:Q data))]
       (if (= v goal)
         ;; meet the goal, return the path list.
         (extract-path-from-prev (:prev data) start goal)
         ;; process edges for current vertex.
         (recur (reduce (partial D-process-edge v d)
                        (mark-visited data v)
-                       (edges G v))))
-      ##Inf)))
+                       (edges G v)))))))
 #+END_SRC
 To update result based on an edge of current vertex.
 #+BEGIN_SRC clojure
@@ -519,7 +518,7 @@ To update result based on an edge of current vertex.
           data)))))
 #+END_SRC
 
-For map =prev=:
+The data structure of map =prev= is straigtforward:
 - each key is a vertex and
 - the value for each key is its previous shortest vertex.
 #+BEGIN_SRC clojure
@@ -581,6 +580,8 @@ To calculate the eccentricity =\epsilon (v)=, we can reuse the routines in above
           ;; return the maximum distance.
           (apply max (vals dist)))))))
 #+END_SRC
+If there is no path connecting the two vertices, i.e., if they belong to different connected components,
+then conventionally the distance is defined as infinite.
 
 To calculate the radius =r= of a graph:
 #+BEGIN_SRC clojure
