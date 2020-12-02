@@ -359,7 +359,7 @@ By above definition, any edge in a graph =G(N S)= will have a unique identifier 
 
 So for a graph =G(N S)=, we can build an array to hold all its edges, please note that for any edge =(A B)=, =A= must be smaller than =B=:
 #+BEGIN_SRC clojure
-(defn graph-edges [N]
+(defn all-possible-edges [N]
   (for [A (range 1 N)
         B (range 2 (inc N))
         :when (> B A)]
@@ -369,7 +369,7 @@ So for a graph =G(N S)=, we can build an array to hold all its edges, please not
 And we can choose random edges after a =shuffle= like this:
 #+BEGIN_SRC clojure
 (defn random-edges [N S]
-  (sort (take S (shuffle (graph-edges N)))))
+  (sort (take S (shuffle (all-possible-edges N)))))
 #+END_SRC
 We will sort the edges to meet the rule 4 in our definition.
 
