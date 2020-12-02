@@ -432,7 +432,7 @@ so we just list the steps of it here with some notes for our implementation.
    - ~In this implementation~, the tentative distance value will be Clojure value =##Inf= for all other nodes.
 3. For the current node, consider all of its unvisited neighbors and calculate their tentative distances through the current node.
    Compare the newly calculated tentative distance to the current assigned value and assign the smaller one.
-   For example, if the current node A is marked with a distance of 6, and the edge connecting it with a neighbors B has length 2,
+   For example, if the current node A is marked with a distance of 6, and the edge connecting it with a neighbor B has length 2,
    then the distance to B through A will be 6 + 2 = 8. If B was previously marked with a distance greater than 8 then change it to 8.
    Otherwise, the current value will be kept.
 4. When we are done considering all the unvisited neighbors of the current node,
@@ -519,7 +519,7 @@ We will calculate three things in this section, below is their definitions:
 
   It is the greatest distance between =v= and any other vertex; in symbols that is
   $$
-  \epsilon (v)=\max _{u\in V}d(v,u)}
+  \epsilon (v)=\max _{u\in V}d(v,u)
   $$
   It can be thought of as how far a node is from the node most distant from it in the graph.
 
@@ -538,7 +538,7 @@ We will calculate three things in this section, below is their definitions:
   d=\max _{v\in V}\epsilon (v)
   $$
   To find the diameter of a graph, first find the shortest path between each pair of vertices.
-  The greatest length of any of these paths is the diameter of the graph.
+  The greatest length of these paths is the diameter of the graph.
 
 To calculate the eccentricity =\epsilon (v)=, we can reuse the routines in above section and return the max distance for all distances from =v=.
 #+BEGIN_SRC clojure
