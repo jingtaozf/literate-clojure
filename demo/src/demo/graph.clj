@@ -40,6 +40,7 @@ Let's create a new namespace for this library.
   (:require
    [clojure.pprint :refer [cl-format]]
    [dorothy.core :as dot]
+   [clojure.data.priority-map :refer [priority-map]]
    ))
 #+END_SRC
 * Original codes from the article
@@ -268,6 +269,7 @@ This section show the answers for above questions.
 To represent a directed graph with weight, we will use
 - an unique integer as the vertex name
   - Actually it can be any valid key name of a map in our implementation.
+  - We will not use a =keyword= as the vertex name to avoid introducing additional keywords to Clojure namespace.
 - an array containing a list of tuples with the vertex name and the weight
 
 And a graph will be a =map= which =keys= are all vertices and =values= are all edges with weight.
@@ -283,6 +285,26 @@ So edges of one vertex can be obtained by its vertex name.
 (defn edges [G vertex]
   (get G vertex))
 #+END_SRC
+
+To create a new edge
+#+BEGIN_SRC clojure
+(defn create-edge [edge-vertex weight]
+  [edge-vertex weight])
+#+END_SRC
+
+
+And edge target vertex is its first element in the tuple.
+#+BEGIN_SRC clojure
+(defn edge-vertex [edge]
+  (first edge))
+#+END_SRC
+Edge weight is its second element in the tuple.
+#+BEGIN_SRC clojure
+(defn edge-weight [edge]
+  (second edge))
+#+END_SRC
+
+
 ** 2. An algorithm to randomly generate a simple directed graph
 Such that
 #+begin_example
@@ -347,7 +369,7 @@ Then we can extract edges for each vertex and build it to a graph like this:
                   (let [start-vertex (edge-start-vertex N edge-id)
                         end-vertex (edge-end-vertex N edge-id start-vertex)]
                     (assoc! g start-vertex (conj (get g start-vertex [])
-                                                 [end-vertex (random-weight)]))))
+                                                 (create-edge end-vertex (random-weight))))))
                 (transient {})
                 (random-edges N S))
       graph
@@ -367,7 +389,7 @@ We can visualize this graph into a picture via [[https://github.com/daveray/doro
   (-> (reduce (fn [ret vertex]
                 (concat ret (map
                              (fn [edge]
-                               [vertex (first edge) {:label (second edge)}])
+                               [vertex (edge-vertex edge) {:label (edge-weight edge)}])
                              (edges graph vertex))))
               [] (keys graph))
       dot/digraph
@@ -392,5 +414,81 @@ So you can define a graph and visualize it like this
 (render-graph random-graph "docs/images/random-graph.png")
 #+END_SRC
 [[../../docs/images/random-graph.png]]
-** TODO 3. Write an implementation of [[https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm][Dijkstra's algorithm]]
-** TODO 4. Write a suite of functions to calculate distance properties for your graph.
+** 3. Write an implementation of [[https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm][Dijkstra's algorithm]]
+We use a priority queue =Q= to hold the distance for current visiting node for a better performance, and instead of
+filling the priority queue with all nodes, we initialize it to contain only source to reduce the memory cost.
+
+[[https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm#Using_a_priority_queue][This wiki page]] contains the detailed description about this algorithm,
+so we just list the steps of it here with some notes for our implementation.
+
+1. Mark all nodes unvisited. Create a set of all the unvisited nodes called the unvisited set.
+   - ~In this implementation~, it is unvisited if the vertex is not in the map =dist=.
+2. Assign to every node a tentative distance value:
+   set it to zero for our initial node and to infinity for all other nodes.
+   Set the initial node as current
+   - ~In this implementation~, the tentative distance value will be Clojure value =##Inf= for all other nodes.
+3. For the current node, consider all of its unvisited neighbours and calculate their tentative distances through the current node.
+   Compare the newly calculated tentative distance to the current assigned value and assign the smaller one.
+   For example, if the current node A is marked with a distance of 6, and the edge connecting it with a neighbour B has length 2,
+   then the distance to B through A will be 6 + 2 = 8. If B was previously marked with a distance greater than 8 then change it to 8.
+   Otherwise, the current value will be kept.
+4. When we are done considering all of the unvisited neighbours of the current node,
+   mark the current node as visited and remove it from the unvisited set. A visited node will never be checked again.
+5. If the destination node has been marked visited (when planning a route between two specific nodes)
+   or if the smallest tentative distance among the nodes in the unvisited set is infinity (when planning a complete traversal;
+   occurs when there is no connection between the initial node and remaining unvisited nodes), then stop.
+   The algorithm has finished.
+   - ~In this implementation~, if we can't meet the =goal= vertex, then it will return =nil=.
+6. Otherwise, select the unvisited node that is marked with the smallest tentative distance,
+   set it as the new "current node", and go back to step 3.
+#+BEGIN_SRC clojure
+(defn D [G start goal]
+  (loop [result {:Q (priority-map start 0)
+                 :prev {}
+                 :explored #{}
+                 :dist {}}]
+    ;; return best vertex
+    (if-let [[v d] (peek (:Q result))]
+      (if (= v goal)
+        ;; return the path list.
+        (extract-path-from-prev (:prev result) start goal)
+        (recur (reduce (partial D-process-edge v d)
+                       (update-in (update-in result [:Q] pop)
+                                  [:explored] (fn[explored] (conj explored v)))
+                       (edges G v)))))))
+#+END_SRC
+To update result based on an edge of current vertex.
+#+BEGIN_SRC clojure
+(defn D-process-edge [v d result edge]
+  (let [edge-vertex (edge-vertex edge)]
+    (if (contains? (:explored result) edge-vertex)
+      ;; if it has been visited, not visit it twice.
+      result
+      (let [alt (+ d (edge-weight edge))]
+        (if (< alt (get-in result [:dist edge-vertex] ##Inf))
+          (assoc result
+                 ;; add best vertex
+                 :Q (assoc (:Q result) edge-vertex alt)
+                 :dist (assoc (:dist result) edge-vertex alt)
+                 :prev (assoc (:prev result) edge-vertex v))
+          result)))))
+#+END_SRC
+
+To extract path from the =prev= section
+#+BEGIN_SRC clojure
+(defn extract-path-from-prev [prev start goal]
+  (loop [path ()
+         prev-node (get prev goal)]
+    (if (= prev-node start)
+      path
+      (recur (cons prev-node path)
+             (get prev prev-node)))))
+#+END_SRC
+
+Now you can get the shortest path between two vertices like this:
+#+BEGIN_SRC clojure :load no
+(def random-graph G(10,10))
+(D random-graph (first (keys random-graph)) (last (keys random-graph)))
+(D random-graph 1 10)
+#+END_SRC
+** 4. Write a suite of functions to calculate distance properties for your graph.
