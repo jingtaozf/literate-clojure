@@ -11,6 +11,7 @@
 * Table of Contents                                               :noexport:TOC:
 - [[#introduction][Introduction]]
 - [[#preparation][Preparation]]
+  - [[#how-to-read-mathematical-formulas][how to read mathematical formulas]]
   - [[#namespace][namespace]]
 - [[#original-codes-from-the-article][Original codes from the article]]
   - [[#graph-representing][graph representing]]
@@ -33,6 +34,8 @@
 * Introduction
 This is a demo code for graph traversal, to pass the [[https://bitbucket.org/audiencerepublic/developer-test/wiki/clojure-2][developer test]] based on article [[http://hueypetersen.com/posts/2013/06/25/graph-traversal-with-clojure/][Graph Traversal with Clojure]].
 * Preparation
+** how to read mathematical formulas
+To read Latex formulas in this file from Github, Please install chrome extention [[https://chrome.google.com/webstore/detail/mathjax-plugin-for-github/ioemnmodlmafdkllaclgeombjnmnbima?hl=en][MathJax Plugin for Github]].
 ** namespace
 Let's create a new namespace for this library.
 #+BEGIN_SRC clojure
@@ -438,45 +441,61 @@ so we just list the steps of it here with some notes for our implementation.
    or if the smallest tentative distance among the nodes in the unvisited set is infinity (when planning a complete traversal;
    occurs when there is no connection between the initial node and remaining unvisited nodes), then stop.
    The algorithm has finished.
-   - ~in this implementation~, if we can't meet the =goal= vertex, then it will return =nil=.
+   - ~in this implementation~, if we can't meet the =goal= vertex, then it will return =##Inf=.
 6. Otherwise, select the unvisited node that is marked with the smallest tentative distance,
    set it as the new "current node", and go back to step 3.
 
+We will store all intermediate data for our algorithm in a map:
 #+BEGIN_SRC clojure
+(defn D-initialized-data [start]
+  {:Q (priority-map start 0)
+   :prev {}
+   :explored #{}
+   :dist {}})
+#+END_SRC
+
+Before process edges for current vertex, we will mark it as explored and pop from priority map
+#+BEGIN_SRC clojure
+(defn mark-visited [data v]
+  (update-in (update-in data [:Q] pop)
+             [:explored] (fn [explored] (conj explored v))))
+#+END_SRC
+
+
+#+BEGIN_SRC clojure
+(declare extract-path-from-prev D-process-edge); forward references
 (defn D [G start goal]
-  (loop [result {:Q (priority-map start 0)
-                 :prev {}
-                 :explored #{}
-                 :dist {}}]
+  (loop [data (D-initialized-data start)]
     ;; return best vertex
-    (if-let [[v d] (peek (:Q result))]
+    (if-let [[v d] (peek (:Q data))]
       (if (= v goal)
-        ;; return the path list.
-        (extract-path-from-prev (:prev result) start goal)
+        ;; meet the goal, return the path list.
+        (extract-path-from-prev (:prev data) start goal)
+        ;; process edges for current vertex.
         (recur (reduce (partial D-process-edge v d)
-                       (update-in (update-in result [:Q] pop)
-                                  [:explored] (fn [explored] (conj explored v)))
-                       (edges G v)))))))
+                       (mark-visited data v)
+                       (edges G v))))
+      ##Inf)))
 #+END_SRC
 To update result based on an edge of current vertex.
 #+BEGIN_SRC clojure
-(defn D-process-edge [v d result edge]
+(defn D-process-edge [v d data edge]
   (let [edge-vertex (edge-vertex edge)]
-    (if (contains? (:explored result) edge-vertex)
+    (if (contains? (:explored data) edge-vertex)
       ;; if it has been visited, not visit it twice.
-      result
+      data
       (let [alt (+ d (edge-weight edge))]
-        (if (< alt (get-in result [:dist edge-vertex] ##Inf))
-          (assoc result
+        (if (< alt (get-in data [:dist edge-vertex] ##Inf))
+          (assoc data
                  ;; add best vertex
-                 :Q (assoc (:Q result) edge-vertex alt)
-                 :dist (assoc (:dist result) edge-vertex alt)
-                 :prev (assoc (:prev result) edge-vertex v))
-          result)))))
+                 :Q (assoc (:Q data) edge-vertex alt)
+                 :dist (assoc (:dist data) edge-vertex alt)
+                 :prev (assoc (:prev data) edge-vertex v))
+          data)))))
 #+END_SRC
 
-To extract path from the =prev= section, please note that:
-- each key in map =prev= is a vertex and
+For map =prev=:
+- each key is a vertex and
 - the value for each key is its previous shortest vertex.
 #+BEGIN_SRC clojure
 (defn extract-path-from-prev [prev start goal]
@@ -495,3 +514,67 @@ Now you can get the shortest path between two vertices like this:
 (D random-graph 1 10)
 #+END_SRC
 ** 4. Write a suite of functions to calculate distance properties for your graph.
+We will calculate three things in this section, below is their definitions:
+- The eccentricity =\epsilon (v)= of a vertex =v=
+
+  It is the greatest distance between =v= and any other vertex; in symbols that is
+  $$
+  \epsilon (v)=\max _{u\in V}d(v,u)}
+  $$
+  It can be thought of as how far a node is from the node most distant from it in the graph.
+
+- The radius =r= of a graph
+
+  It is the minimum eccentricity of any vertex or, in symbols,
+  $$
+  r=\min _{v\in V}\epsilon (v)=\min _{v\in V}\max _{u\in V}d(v,u)
+  $$
+
+- The diameter =d= of a graph
+
+  It is the maximum eccentricity of any vertex in the graph.
+  That is, =d= is the greatest distance between any pair of vertices or, alternatively,
+  $$
+  d=\max _{v\in V}\epsilon (v)
+  $$
+  To find the diameter of a graph, first find the shortest path between each pair of vertices.
+  The greatest length of any of these paths is the diameter of the graph.
+
+To calculate the eccentricity =\epsilon (v)=, we can reuse the routines in above section and return the max distance for all distances from =v=.
+#+BEGIN_SRC clojure
+(defn eccentricity [G v]
+  (loop [data (D-initialized-data v)]
+    ;; return next best vertex
+    (if-let [[v d] (peek (:Q data))]
+      ;; process edges for current vertex.
+      (recur (reduce (partial D-process-edge v d)
+                     (mark-visited data v)
+                     (edges G v)))
+      (let [dist (:dist data)]
+        (if (empty? dist)
+          ##Inf
+          ;; return the maximum distance.
+          (apply max (vals dist)))))))
+#+END_SRC
+
+To calculate the radius =r= of a graph:
+#+BEGIN_SRC clojure
+(defn radius [G]
+  (reduce min (map (partial eccentricity G) (keys G))))
+#+END_SRC
+To calculate the diameter =d= of a graph:
+#+BEGIN_SRC clojure
+(defn diameter [G]
+  (reduce max (map (partial eccentricity G) (keys G))))
+#+END_SRC
+
+Now you can write something like this to calculate =eccentricity=, =radius=, and =diameter= like this
+#+BEGIN_SRC clojure :load no
+(def random-graph (G 10 10))
+
+(eccentricity random-graph (first (keys random-graph)))
+;; => number expressing eccentricity for `first` vertex in random-graph
+
+(radius random-graph); => minimal eccentricity
+(diameter random-graph); => maximal eccentricity
+#+END_SRC
