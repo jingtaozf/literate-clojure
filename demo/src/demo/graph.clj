@@ -575,7 +575,7 @@ To calculate the eccentricity =\epsilon (v)=, we can reuse the routines in above
                      (mark-visited data v)
                      (edges G v)))
       (let [dist (:dist data)]
-        ;;FIXME: Should I consider all possible disconnection here?
+        ;;FIXME: Should I consider all possible disconnections here?
         (if (empty? dist)
           ##Inf
           ;; return the maximum distance.
