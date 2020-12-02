@@ -267,7 +267,7 @@ We'll also use JShell to interactively run some of your functions, please ensure
 This section show the answers for above questions.
 ** 1. How to represent a directed graph
 To represent a directed graph with weight, we will use
-- an unique integer as the vertex name
+- a unique integer as the vertex name
   - Actually it can be any valid key name of a map in our implementation.
   - We will not use a =keyword= as the vertex name to avoid introducing additional keywords to Clojure namespace.
 - an array containing a list of tuples with the vertex name and the weight
@@ -317,7 +317,7 @@ Output:
 
 For our random graph =G(N S)=, we will apply the following rules
 1. The vertices are integers from =1= to =N=.
-2. Only a connection from a smaller vertex name to a larger vetex name is allowed.
+2. Only a connection from a smaller vertex name to a larger vertex name is allowed.
 3. The weight for an edge is a random integer value between =1= and =10=.
    #+BEGIN_SRC clojure
    (defn random-weight []
@@ -326,7 +326,7 @@ For our random graph =G(N S)=, we will apply the following rules
 4. The edges for a vertex is sorted ascendingly by its target vertex.
    - It will give a better readability to our graph data.
 
-By above definition, any edge in a graph =G(N S)= will have an unique identifier based on its two vertices =(A B)= like this
+By above definition, any edge in a graph =G(N S)= will have a unique identifier based on its two vertices =(A B)= like this
 #+BEGIN_SRC clojure
 (defn edge-id [N A B]
   (+ (* A N) B))
@@ -383,7 +383,7 @@ Then we can extract edges for each vertex and build it to a graph like this:
                                                      (keys graph)))))))
 #+END_SRC
 
-We can visualize this graph into a picture via [[https://github.com/daveray/dorothy][graphviz dot]].
+We can visualize this graph into a picture via [[https://github.com/daveray/dorothy][graphviz DOT]].
 #+BEGIN_SRC clojure
 (defn render-graph [graph graph-file]
   (-> (reduce (fn [ret vertex]
@@ -427,20 +427,21 @@ so we just list the steps of it here with some notes for our implementation.
    set it to zero for our initial node and to infinity for all other nodes.
    Set the initial node as current
    - ~In this implementation~, the tentative distance value will be Clojure value =##Inf= for all other nodes.
-3. For the current node, consider all of its unvisited neighbours and calculate their tentative distances through the current node.
+3. For the current node, consider all of its unvisited neighbors and calculate their tentative distances through the current node.
    Compare the newly calculated tentative distance to the current assigned value and assign the smaller one.
-   For example, if the current node A is marked with a distance of 6, and the edge connecting it with a neighbour B has length 2,
+   For example, if the current node A is marked with a distance of 6, and the edge connecting it with a neighbors B has length 2,
    then the distance to B through A will be 6 + 2 = 8. If B was previously marked with a distance greater than 8 then change it to 8.
    Otherwise, the current value will be kept.
-4. When we are done considering all of the unvisited neighbours of the current node,
+4. When we are done considering all the unvisited neighbors of the current node,
    mark the current node as visited and remove it from the unvisited set. A visited node will never be checked again.
 5. If the destination node has been marked visited (when planning a route between two specific nodes)
    or if the smallest tentative distance among the nodes in the unvisited set is infinity (when planning a complete traversal;
    occurs when there is no connection between the initial node and remaining unvisited nodes), then stop.
    The algorithm has finished.
-   - ~In this implementation~, if we can't meet the =goal= vertex, then it will return =nil=.
+   - ~in this implementation~, if we can't meet the =goal= vertex, then it will return =nil=.
 6. Otherwise, select the unvisited node that is marked with the smallest tentative distance,
    set it as the new "current node", and go back to step 3.
+
 #+BEGIN_SRC clojure
 (defn D [G start goal]
   (loop [result {:Q (priority-map start 0)
@@ -454,7 +455,7 @@ so we just list the steps of it here with some notes for our implementation.
         (extract-path-from-prev (:prev result) start goal)
         (recur (reduce (partial D-process-edge v d)
                        (update-in (update-in result [:Q] pop)
-                                  [:explored] (fn[explored] (conj explored v)))
+                                  [:explored] (fn [explored] (conj explored v)))
                        (edges G v)))))))
 #+END_SRC
 To update result based on an edge of current vertex.
@@ -474,7 +475,9 @@ To update result based on an edge of current vertex.
           result)))))
 #+END_SRC
 
-To extract path from the =prev= section
+To extract path from the =prev= section, please note that:
+- each key in map =prev= is a vertex and
+- the value for each key is its previous shortest vertex.
 #+BEGIN_SRC clojure
 (defn extract-path-from-prev [prev start goal]
   (loop [path ()
