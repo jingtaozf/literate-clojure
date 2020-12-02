@@ -4,6 +4,7 @@
 /demo/target
 /demo/classes
 /demo/checkouts
+/demo/src/demo/ltximg
 profiles.clj
 pom.xml
 pom.xml.asc

@@ -6,6 +6,7 @@
   :dependencies [[org.clojure/clojure "1.10.0"]
                  [literate-clojure "0.3.0"]
                  [dorothy "0.0.6"]
+                 [org.clojure/data.priority-map "1.0.0"]
                  ]
   :injections [(require 'literate-clojure.core)]
   :main ^:skip-aot demo.core

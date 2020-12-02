@@ -33,6 +33,31 @@
 
 * Introduction
 This is a demo code for graph traversal, to pass the [[https://bitbucket.org/audiencerepublic/developer-test/wiki/clojure-2][developer test]] based on article [[http://hueypetersen.com/posts/2013/06/25/graph-traversal-with-clojure/][Graph Traversal with Clojure]].
+
+We use [[https://leiningen.org/][Leingen]] as our project manage tool, to run this demo, please run shell command =lein repl=
+in demo project directory, then you can require this namespace in =REPL= like this:
+#+BEGIN_SRC clojure :load no
+(require 'demo.graph)
+(in-ns 'demo.graph)
+(def random-graph (G 10 10))
+random-graph
+;; {1 [[6 4] [7 7]],
+;;  2 [[10 10]],
+;;  3 [[5 5] [6 4]],
+;;  4 [[10 1]],
+;;  5 [],
+;;  6 [[8 5] [10 10]],
+;;  7 [[9 7] [10 4]],
+;;  8 [],
+;;  9 [],
+;;  10 []}
+(D random-graph 8 9)
+(D random-graph 1 8)
+(eccentricity random-graph (first (keys random-graph)))
+(radius random-graph)
+(diameter random-graph)
+#+END_SRC
+
 * Preparation
 ** how to read mathematical formulas
 To read Latex formulas in this file from Github, Please install chrome extention [[https://chrome.google.com/webstore/detail/mathjax-plugin-for-github/ioemnmodlmafdkllaclgeombjnmnbima?hl=en][MathJax Plugin for Github]].
