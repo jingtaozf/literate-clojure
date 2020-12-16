@@ -3,6 +3,11 @@
 #+Startup: noindent
 #+PROPERTY: literate-lang clojure
 #+PROPERTY: literate-load yes
+* Table of Contents                                            :TOC:noexport:
+- [[#this-is-an-example][this is an example]]
+- [[#list-all-possible-names][List all possible names.]]
+- [[#this-is-a-test-code][this is a test code]]
+
 * this is an example
 #+BEGIN_SRC clojure
 (ns demo.literate-core
