@@ -12,6 +12,8 @@
 - [[#how-to-do-it][how to do it?]]
 - [[#implementation][Implementation]]
   - [[#preparation][Preparation]]
+    - [[#namespace][namespace]]
+    - [[#debug-function][debug function]]
   - [[#stream-read-operations][stream read operations]]
   - [[#reader-macros][reader macros]]
   - [[#handle-org-syntax][handle org syntax]]
@@ -29,7 +31,7 @@ It extends the clojure read syntax so clojure can load org file as source file d
 
 [[https://github.com/limist/literate-programming-examples][literate programming examples]] show the reason why use org mode,
 
-By using clojure package [[https://github.com/jingtaozf/literate-clojure][literate-clojure]] , emacs [[https://orgmode.org/][org mode]] and elisp library [[https://polymode.github.io/][polymode]],
+By using clojure package [[https://github.com/jingtaozf/literate-clojure][literate-clojure]] , Emacs [[https://orgmode.org/][org mode]] and Elisp library [[https://polymode.github.io/][polymode]],
 literate programming can be easy in one org file containing both documentation and source codes,
 and this org file works well with [[https://github.com/clojure-emacs/cider][cider]].
 
@@ -52,7 +54,7 @@ and the clojure codes exists between ~#+begin_src clojure~ and ~#+end_src~
    ,#+END_SRC
 #+END_EXAMPLE
 
-So to let clojure can rean an org file directly, all lines out of surrounding
+So to let clojure can read an org file directly, all lines out of surrounding
 by ~#+begin_src~ and ~#+end_src~ should mean nothing,
 and even codes surrounding by them should mean nothing
 if the [[https://orgmode.org/manual/Code-block-specific-header-arguments.html#Code-block-specific-header-arguments][header arguments]] in a code block request such behavior.
@@ -63,8 +65,8 @@ then ignore all lines after that until it meet ~#+begin_src~.
 When ~#+begign_src lisp~ occurs, org [[https://orgmode.org/manual/Code-block-specific-header-arguments.html#Code-block-specific-header-arguments][header arguments]] for this code block give us
 a chance to switch back to normal clojure reader or not.
 
-And if it switch back to normal clojure reader, the end line ~#+END_SRC~ should mean the end of current
-code block,so a new clojure [[https://clojure.org/reference/reader#_dispatch][dispatch]] syntax for "#+"(sharp plus)will have an additional meaning
+And if it switches back to normal clojure reader, the end line ~#+END_SRC~ should mean the end of current
+code block, so a new clojure [[https://clojure.org/reference/reader#_dispatch][dispatch]] syntax for "#+"(sharp plus)will have an additional meaning
 to determine if it is ~#+END_SRC~,
 if it is, then clojure reader will switch back to org mode syntax,
 if it is not, clojure reader will continue to read subsequent stream as like the original clojure reader.
@@ -75,7 +77,7 @@ for example I often put them in the first line of an org file:
 #+BEGIN_SRC org
 # -*- encoding:utf-8 Mode: POLY-ORG;  -*- ---
 #+END_SRC
-Which make emacs open file with utf-8 encoding and [[https://github.com/polymode/poly-org][poly-org-mode]].
+Which make Emacs open file with utf-8 encoding and [[https://github.com/polymode/poly-org][poly-org-mode]].
 
 * Implementation
 ** Preparation
@@ -97,7 +99,7 @@ A boolean variable to toggle debug on/off
 (defonce ^:dynamic debug-p nil)
 #+END_SRC
 
-a debug function to print out some log messages.
+A debug function to print out some log messages.
 #+BEGIN_SRC clojure
 (defn debug [& args]
   (when debug-p
@@ -165,13 +167,13 @@ Based on clojure's [[https://github.com/clojure/clojure/blob/master/src/jvm/cloj
       (debug (cl-format nil "install dispatch reader macro for character '~a'" ch))
       (aset dm (int ch) fun))))
 #+END_SRC
-But it only works in clojure instead of clojurescript, because clojurescript use [[https://github.com/clojure/tools.reader][tools.reader]].
+But it only works in clojure instead of ClojureScript, because ClojureScript uses [[https://github.com/clojure/tools.reader][tools.reader]].
 
 ** handle org syntax
 
 There are a lot of different lisp codes occur in one org file, some for function implementation,
 some for demo, so a new [[https://orgmode.org/manual/Structure-of-code-blocks.html][org code block]] [[https://orgmode.org/manual/Code-block-specific-header-arguments.html#Code-block-specific-header-arguments][header argument]]  ~load~ to decide to
-read them or not should define,and it has three meanings:
+read them or not should define, and it has three meanings:
 - yes \\
   It means that current code block should load normally,
   it is the default mode when the header argument ~load~ is not provided.
@@ -238,7 +240,7 @@ The ~reader~ is returned so [[https://github.com/clojure/clojure/blob/master/src
 #+END_SRC
 
 ** handle end of source code block
-Let's define a new dispatch function for "#+" (sharp plus) to return back org syntax, until it meet ~#+begin_src clojure~.
+Let's define a new dispatch function for "#+" (sharp plus) to switch back to org syntax, until it meet ~#+begin_src clojure~.
 #+BEGIN_SRC clojure
 (defn- dispatch-sharp-plus [reader quote opts pending-forms]
   (let [line (literate-read-line reader)]
@@ -253,8 +255,8 @@ Let's define a new dispatch function for "#+" (sharp plus) to return back org sy
     (dispatch-sharp-plus reader quote opts pending-forms)))
 #+END_SRC
 ** install new dispatcher functions
-We make ~install-org-dispatcher~ accept as possible as many args so it can be a  dummy handler for other module, for example
-warning handler of clojurescript.
+We make ~install-org-dispatcher~ accept arguments, so it can be a dummy handler for other modules, for example
+warning handler of ClojureScript.
 #+BEGIN_SRC clojure
 (defn install-org-dispatcher [& args]
   (when-not args
@@ -265,7 +267,7 @@ warning handler of clojurescript.
 #+END_SRC
 ** install new dispatcher functions to tools.reader
 Sadly [[https://github.com/clojure/tools.reader][tools.reader]] use a private function to return dispatch functions(see function [[https://github.com/clojure/tools.reader/blob/master/src/main/clojure/clojure/tools/reader.clj][dispatch-macros]]).
-So we have to advice this function to add new dispatch reader macro.
+So we have to alter this function to add new dispatch reader macro.
 #+BEGIN_SRC clojure
 (defn tools.reader.additional-dispatch-macros [orig-fn]
   #(or (orig-fn %)
@@ -328,9 +330,9 @@ If we want to release to [[./core.clj]], the following codes should execute:
 #+END_SRC
 
 * References
-- [[http://www.literateprogramming.com/knuthweb.pdf][Literate. Programming.]] by [[https://www-cs-faculty.stanford.edu/~knuth/lp.html][Donald E. Knuth]]
-- [[http://www.literateprogramming.com/][Literate Programming]]  a site of literate programming
-- [[https://www.youtube.com/watch?v=Av0PQDVTP4A][Literate Programming in the Large]] a talk video from Timothy Daly,one of the original authors of [[https://en.wikipedia.org/wiki/Axiom_(computer_algebra_system)][Axiom]].
+- [[http://www.literateprogramming.com/knuthweb.pdf][Literate. Programming]], by [[https://www-cs-faculty.stanford.edu/~knuth/lp.html][Donald E. Knuth]]
+- [[http://www.literateprogramming.com/][Literate Programming]] a site of literate programming
+- [[https://www.youtube.com/watch?v=Av0PQDVTP4A][Literate Programming in the Large]] a talk video from Timothy Daly, one of the original authors of [[https://en.wikipedia.org/wiki/Axiom_(computer_algebra_system)][Axiom]].
 - [[https://github.com/limist/literate-programming-examples][A collection of literate programming examples using Emacs Org mode]]
 - [[https://orgmode.org/worg/org-contrib/babel/intro.html#literate-programming][literate programming in org babel]]
 - a reader macro library for clojure: https://github.com/klutometis/reader-macros

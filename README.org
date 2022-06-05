@@ -77,7 +77,7 @@ And in my Emacs configuration file, I will add a hook to enable [[https://polymo
 #+END_SRC
 So Github can render such source file as org mode correctly.
 ** how to insert code block quickly
-Please have a look of the section [[https://github.com/jingtaozf/literate-elisp/blob/master/literate-elisp.org#how-to-insert-code-block-in-org-file][How to insert code block in org file]] in library [[https://github.com/jingtaozf/literate-elisp][literate-lisp]].
+Please have a look of the section [[https://github.com/jingtaozf/literate-elisp/blob/master/literate-elisp.org#how-to-insert-code-block-in-org-file][How to insert code block in org file]] in library [[https://github.com/jingtaozf/literate-elisp][literate-elisp]].
 ** Add dependence in project.clj
 To use this library, please add dependence in your [[./demo/project.clj][project.clj]]:
 #+BEGIN_SRC clojure
