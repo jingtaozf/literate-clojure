@@ -90,7 +90,7 @@ Then in one of your [[./demo/src/demo/core.clj][source file]],add the following 
 (literate-clojure.core/install-org-dispatcher)
 (load-file "src/demo/core.org")
 #+END_SRC
-Now you can use [[./demo/src/demo/core.org][core.org]] to write your documentation and source codes together,
+Now you can use [[./demo/src/demo/literate_core.clj][literate_core.clj]] to write your documentation and source codes together,
 and any codes in [[./demo/src/demo/core.org][core.org]] will be loaded automatically.
 ** The special requirement for org files
 The org files must start with a sharp and a space, for example I usually add the following line
