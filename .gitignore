@@ -22,3 +22,5 @@ pom.xml.asc
 *.tex
 *.log
 src/literate_clojure/auto/
+/src/literate_clojure/core.bbl
+/src/literate_clojure/core.synctex.gz
